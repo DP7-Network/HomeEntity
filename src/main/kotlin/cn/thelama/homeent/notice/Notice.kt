@@ -17,6 +17,7 @@ object Notice : Listener {
     private val playerList = LinkedList<Player>();
 
     fun parseMessage(message: String, players: List<Player> = playerList): List<Player> {
+        return listOf()
         val foundPlayers = ArrayList<Player>(1)
         var startIndex = 0
         var b = true
@@ -62,6 +63,7 @@ object Notice : Listener {
     }
 
     fun playerUpdateAdd(player: Player) {
+        return
         val length = player.name.length
         var b = true
         playerList.forEachIndexed { index, s ->
@@ -77,6 +79,7 @@ object Notice : Listener {
     }
 
     private fun playerUpdateRemove(player: Player) {
+        return
         playerList -= player
         maxLength = playerList.last.name.length
     }

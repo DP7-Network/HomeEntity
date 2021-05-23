@@ -32,6 +32,7 @@ import sun.misc.Unsafe
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.io.InputStreamReader
 import java.lang.reflect.Field
 import java.security.MessageDigest
 import java.util.*
@@ -54,6 +55,7 @@ class HomeEntity : JavaPlugin(), Listener {
     lateinit var maintainers: ArrayList<UUID>
     lateinit var reports: ArrayList<ReportEntry>
     lateinit var reportUpdates: HashMap<UUID, ReportEntry>
+    lateinit var minecraftTranslation: HashMap<String, String>
     val lastTeleport: HashMap<UUID, Location> = HashMap()
 
     private lateinit var warpsFile: File
@@ -99,6 +101,16 @@ class HomeEntity : JavaPlugin(), Listener {
                 }
             }.also {
                 logger.info("    ${ChatColor.GREEN}Passwords loaded in $it ms")
+            }
+
+            logger.info("  Loading translations")
+            measureTimeMillis {
+                logger.info("    Parsing file...")
+                gson.fromJson<HashMap<String, String>>(InputStreamReader(this.javaClass.classLoader.getResourceAsStream("zh-cn.lang")!!), object : TypeToken<HashMap<String, String>>() {}.type).also {
+                    minecraftTranslation = it ?: HashMap()
+                }
+            }.also {
+                logger.info("    ${ChatColor.GREEN}Translations loaded in $it ms")
             }
 
             logger.info("  Loading Maintainers")
@@ -307,6 +319,7 @@ class HomeEntity : JavaPlugin(), Listener {
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册  ")
         e.player.sendMessage("${ChatColor.RED}   <如果忘记密码请找管理员重置>  ")
         e.player.sendMessage("${ChatColor.GRAY}============================")
+        e.player.sendMessage("${ChatColor.GRAY}P.S. 不是/.l也不是'.l是.l")
         SessionHandler.limit(e.player)
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {

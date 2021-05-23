@@ -1,10 +1,12 @@
 package cn.thelama.homeent.show
 
 import cn.thelama.homeent.HomeEntity
+import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.HoverEvent
 import net.md_5.bungee.api.chat.ItemTag
 import net.md_5.bungee.api.chat.hover.content.Item
+import net.md_5.bungee.api.chat.hover.content.Text
 import net.minecraft.server.v1_16_R3.NBTTagCompound
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -25,23 +27,23 @@ object ShowHandler : CommandExecutor {
             }
             if(args.isNotEmpty()) {
                 when(args[0]) {
-                    "head" -> {
+                    "helmet" -> {
                         display(sender.inventory.helmet, sender)
                     }
 
-                    "body" -> {
+                    "chestplate" -> {
                         display(sender.inventory.chestplate,sender)
                     }
 
-                    "leg" -> {
+                    "leggings" -> {
                         display(sender.inventory.leggings, sender)
                     }
 
-                    "foot" -> {
+                    "boots" -> {
                         display(sender.inventory.boots, sender)
                     }
 
-                    "left" -> {
+                    "offhand" -> {
                         display(sender.inventory.itemInOffHand, sender)
                     }
 
@@ -49,8 +51,12 @@ object ShowHandler : CommandExecutor {
                         //TODO
                     }
 
+                    "byid" -> {
+
+                    }
+
                     else -> {
-                        sender.sendMessage("/show [head|body|leg|foot|left|inv]")
+                        sender.sendMessage("/show [helmet|chestplate|leggings|boots|offhand|inv]")
                     }
                 }
             } else {
@@ -66,24 +72,21 @@ object ShowHandler : CommandExecutor {
             return
         }
 
-        val nbt = NBTTagCompound()
-        val nmsItem = CraftItemStack.asNMSCopy(item).also { it.save(nbt) }
-        val base = ComponentBuilder("${ChatColor.GREEN}${sender.name} Showed his ")
-        val msg = ComponentBuilder("${ChatColor.AQUA}[${parseMetaName(item.itemMeta)}]")
-        val name = nmsItem.item.name.replace("block.", "").replace("item.", "").replace(".", ":")
-        msg.currentComponent.hoverEvent = HoverEvent(HoverEvent.Action.SHOW_ITEM, Item(name, 1, ItemTag.ofNbt(nbt.toString())))
+        val base = ComponentBuilder("${ChatColor.GREEN}${sender.name} 展示了他的 ")
+        val msg = ComponentBuilder("${ChatColor.AQUA}[${parseMetaName(item.itemMeta, CraftItemStack.asNMSCopy(item))}]")
+        msg.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/show byid ${ShowManager.createDisplay(item)}")
         base.append(msg.create())
         Bukkit.getOnlinePlayers().forEach { it.spigot().sendMessage(*base.create()) }
     }
 
-    private fun parseMetaName(meta: ItemMeta?): String {
+    private fun parseMetaName(meta: ItemMeta?, nmsItem: net.minecraft.server.v1_16_R3.ItemStack): String {
         if(meta == null) {
             return "${ChatColor.RED}Unit${ChatColor.AQUA}"
         }
         return if(meta.hasDisplayName()) {
             meta.displayName
         } else {
-            meta.localizedName
+            HomeEntity.instance.minecraftTranslation[nmsItem.item.name]!!
         }
     }
 }

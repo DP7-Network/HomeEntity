@@ -7,6 +7,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import kotlin.math.abs
 
 object SlimeHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
@@ -15,8 +16,9 @@ object SlimeHandler : CommandExecutor {
                 if(args.isNotEmpty()) {
                     kotlin.runCatching {
                         val iBound = args[0].toInt()
-                        if(iBound > 10) {
+                        if(abs(iBound) > 10) {
                             sender.sendMessage("${ChatColor.RED}请输入一个**合理**的数字范围好吧...")
+                            return true
                         }
                         Bukkit.getScheduler().runTaskAsynchronously(HomeEntity.instance, Runnable {
                             val offsetRange = -iBound..iBound
