@@ -4,7 +4,6 @@ package cn.thelama.homeent
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.notice.Notice
-import cn.thelama.homeent.report.ReportEntry
 import cn.thelama.homeent.session.SessionHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
@@ -40,11 +39,6 @@ import kotlin.system.measureTimeMillis
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val REPORT_REPLY_REJECT = "REJECTED"
-        const val REPORT_REPLY_ACCEPT = "ACCEPTED"
-        const val REPORT_REPLY_PENDING = "PENDING"
-        const val REPORT_TYPE_BUG = "Bug"
-        const val REPORT_TYPE_FEATURE = "Feature"
         lateinit var instance: HomeEntity
         lateinit var protocolManager: ProtocolManager
     }
@@ -53,15 +47,11 @@ class HomeEntity : JavaPlugin(), Listener {
     lateinit var warps: HashMap<String, LocationWrapper>
     lateinit var passwords: HashMap<UUID, String>
     lateinit var maintainers: ArrayList<UUID>
-    lateinit var reports: ArrayList<ReportEntry>
-    lateinit var reportUpdates: HashMap<UUID, ReportEntry>
     lateinit var minecraftTranslation: HashMap<String, String>
     val lastTeleport: HashMap<UUID, Location> = HashMap()
 
     private lateinit var warpsFile: File
     private lateinit var maintainersFile: File
-    private lateinit var reportsFile: File
-    private lateinit var reportUpdatesFile: File
     private lateinit var passwordsFile: File
 
     override fun onLoad() {
@@ -127,33 +117,6 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Maintainers loaded in $it ms")
             }
 
-            logger.info("  Loading Reports")
-            measureTimeMillis {
-                reportsFile = File(dataFolder, "reports.json")
-                if(!reportsFile.exists()) {
-                    reportsFile.createNewFile()
-                }
-                logger.info("    Parsing file...")
-                gson.fromJson<ArrayList<ReportEntry>>(FileReader(reportsFile), object: TypeToken<ArrayList<ReportEntry>>() {}.type).also {
-                    reports = it ?: ArrayList()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}Reports loaded in $it ms")
-            }
-
-            measureTimeMillis {
-                reportUpdatesFile = File(dataFolder, "reportUpdates.json")
-                if(!reportUpdatesFile.exists()) {
-                    reportUpdatesFile.createNewFile()
-                }
-                logger.info("    Parsing file...")
-                gson.fromJson<HashMap<UUID, ReportEntry>>(FileReader(reportUpdatesFile), object: TypeToken<HashMap<UUID, ReportEntry>>() {}.type).also {
-                    reportUpdates = it ?: HashMap()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}ReportUpdates loaded in $it ms")
-            }
-
             logger.info("  Register commands...")
 
             this.getCommand("warp")!!.apply {
@@ -188,13 +151,6 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Command slime registered successfully")
             }
 
-            this.getCommand("report")!!.apply {
-                logger.info("    ${ChatColor.RED}Command report cannot register due to this command is WIP")
-                //setExecutor(ReportHandler)
-                //tabCompleter = ReportCompleter
-                //logger.info("    ${ChatColor.GREEN}Command report registered successfully")
-            }
-
             logger.info("  Register events...")
 
             server.pluginManager.registerEvents(this, this)
@@ -221,10 +177,6 @@ class HomeEntity : JavaPlugin(), Listener {
         writeFile(passwordsFile, gson.toJson(passwords))
         logger.info("    Saving maintainers")
         writeFile(maintainersFile, gson.toJson(maintainers))
-        logger.info("    Saving reports")
-        writeFile(reportsFile, gson.toJson(reports))
-        logger.info("    Saving ReportUpdates")
-        writeFile(reportUpdatesFile, gson.toJson(reportUpdates))
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")
     }
 
