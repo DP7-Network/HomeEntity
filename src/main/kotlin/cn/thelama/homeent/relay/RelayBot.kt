@@ -35,7 +35,8 @@ class RelayBot(private val groupId: Long, private val token: String) {
                     Bukkit.getLogger().info("A nameless user is speaking...")
                     from.username()
                 } else {
-                    "${from.firstName() + " "}${from.lastName() ?: ""}"
+                    val lastName = from.lastName()
+                    "${from.firstName()}${if (lastName == null) "" else " $lastName"}"
                 }
 
                 if(update.message().text() != null) {

@@ -330,7 +330,7 @@ class HomeEntity : JavaPlugin(), Listener {
         }
 
         Notice.parseMessage(e.message).forEach {
-            it.sendTitle("${e.player}@你辣快去看看!", "", 10, 3 * 20, 10)
+            it.sendTitle("${ChatColor.YELLOW}有人提到你", "${ChatColor.YELLOW}${e.player.name}${ChatColor.WHITE} 在聊天消息中提到了你，快去看看", 10, 3 * 20, 10)
         }
 
         if(!e.isCancelled) {

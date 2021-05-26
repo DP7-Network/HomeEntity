@@ -27,12 +27,12 @@ object Notice : Listener {
         while (true) {
             val index = message.indexOf('@', startIndex)
             if (index == -1) break
-            val sub = if (message.length > maxLength) {
+            val sub = if (message.length - index > maxLength) {
                 val startIndex1 = index + 1
                 val lastIndex1 = startIndex1 + maxLength
                 message.substring(startIndex1, lastIndex1)
             } else message.substring(index + 1)
-            logger.info("[Notice:MessageParse] Found '@' at index $index, looking for $playerSize} name(s) in '$sub'...")
+            logger.info("[Notice:MessageParse] Found '@' at index $index, looking for $playerSize name(s) in '$sub'...")
             var b1 = false
             var player: Player? = null
             for (p in players) {
