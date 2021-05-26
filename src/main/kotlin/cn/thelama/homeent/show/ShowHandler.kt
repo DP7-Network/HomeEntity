@@ -52,7 +52,9 @@ object ShowHandler : CommandExecutor {
                     }
 
                     "byid" -> {
-
+                        if(args.size > 1) {
+                            ShowManager.show(args[1], sender)
+                        }
                     }
 
                     else -> {

@@ -24,9 +24,12 @@ object ExitHandler : CommandExecutor {
                             Float.MAX_VALUE,
                             mutableListOf(),
                             Vec3D(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE)))
+                    } else {
+                        sender.sendMessage("/exit [crash]")
                     }
+                } else {
+                    sender.kickPlayer(texts.random())
                 }
-                sender.kickPlayer(texts.random())
             }
         }
         return true

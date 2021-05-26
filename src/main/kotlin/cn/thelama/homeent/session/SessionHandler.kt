@@ -1,6 +1,8 @@
 package cn.thelama.homeent.session
 
 import cn.thelama.homeent.HomeEntity
+import net.minecraft.server.v1_16_R3.PacketPlayOutExplosion
+import net.minecraft.server.v1_16_R3.Vec3D
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
@@ -22,6 +24,14 @@ object SessionHandler : CommandExecutor {
             }
             if(args.size >= 2) {
                 when(args[0]) {
+                    "login" -> {
+                        val player = Bukkit.getPlayer(args[1])
+                        if(player != null) {
+                            HomeEntity.instance.unloggedInPlayers.remove(player.uniqueId)
+                            removeLimit(player)
+                        }
+                    }
+
                     "reset" -> {
                         val uid = Bukkit.getOfflinePlayer(args[1]).uniqueId
                         if(uid in HomeEntity.instance.passwords) {
@@ -39,13 +49,13 @@ object SessionHandler : CommandExecutor {
                     }
 
                     "maintainer" -> {
-                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' HAS BEEN ADDED TO MAINTAINERS BY '${sender.name}' ** ")
+                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' 已被 '${sender.name}' 添加到维护者中 ** ")
                         HomeEntity.instance.maintainers.add(Bukkit.getOfflinePlayer(args[1]).uniqueId)
                         sender.sendMessage("${ChatColor.GREEN}添加成功")
                     }
 
                     "revoke" -> {
-                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' HAS BEEN REMOVED FROM MAINTAINERS BY '${sender.name}' ** ")
+                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' 已被 '${sender.name}' 从维护者中删除 ** ")
                         HomeEntity.instance.maintainers.remove(Bukkit.getOfflinePlayer(args[1]).uniqueId)
                         sender.sendMessage("${ChatColor.GREEN}移除成功")
                     }
@@ -68,12 +78,25 @@ object SessionHandler : CommandExecutor {
                         }
                     }
 
+                    "crash" -> {
+                        (Bukkit.getPlayer(args[1]) as CraftPlayer?)?.handle?.playerConnection?.sendPacket(
+                            PacketPlayOutExplosion(
+                            Double.MAX_VALUE,
+                            Double.MAX_VALUE,
+                            Double.MAX_VALUE,
+                            Float.MAX_VALUE,
+                            mutableListOf(),
+                            Vec3D(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE)
+                            )
+                        )
+                    }
+
                      else -> {
-                         sender.sendMessage("${ChatColor.RED}/session <reset|maintainer|revoke|limit|off> <player> [...]")
+                         sender.sendMessage("${ChatColor.RED}/session <reset|maintainer|revoke|limit|off|login|crash> <player> [...]")
                      }
                 }
             } else {
-                sender.sendMessage("${ChatColor.RED}/session <reset|maintainer|revoke|limit|off> <player> [...]")
+                sender.sendMessage("${ChatColor.RED}/session <reset|maintainer|revoke|limit|off|login|crash> <player> [...]")
             }
         }
         return true

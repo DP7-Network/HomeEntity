@@ -28,6 +28,7 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
                         ".l", ".i", ".login", "/.l", "/.i", "/.login", "/l", "/i", "/login" -> {
                             if(HomeEntity.instance.checkCredentials(player, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
+                                player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 synchronized(HomeEntity.instance.unloggedInPlayers) {
                                     HomeEntity.instance.unloggedInPlayers.remove(player.uniqueId)
                                 }
@@ -42,6 +43,7 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
                         ".r", ".reg", ".register", "/.r", "/.reg", "/.register", "/r", "/reg", "/register" -> {
                             if(HomeEntity.instance.register(player, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到.DP7 996 Days")
+                                player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 synchronized(HomeEntity.instance.unloggedInPlayers) {
                                     HomeEntity.instance.unloggedInPlayers.remove(player.uniqueId)
                                 }
@@ -55,8 +57,8 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
                     }
                 } else {
                     player.sendMessage("${ChatColor.RED}参数不正确")
-                    player.sendMessage("${ChatColor.GREEN}正确的登录方法：'.l <密码>'")
-                    player.sendMessage("${ChatColor.GREEN}正确使用方法：'.r <密码>'")
+                    player.sendMessage("${ChatColor.GREEN}正确的登录方法：'/l <密码>'")
+                    player.sendMessage("${ChatColor.GREEN}正确使用方法：'/r <密码>'")
                 }
             }
             player.sendMessage("${ChatColor.RED}请先登录!")

@@ -4,9 +4,12 @@ package cn.thelama.homeent
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.notice.Notice
+import cn.thelama.homeent.p.PrivateHandler
+import cn.thelama.homeent.relay.RelayBot
 import cn.thelama.homeent.session.SessionHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
+import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.warp.LocationWrapper
 import cn.thelama.homeent.warp.WarpCompleter
@@ -45,6 +48,7 @@ class HomeEntity : JavaPlugin(), Listener {
     private val gson = Gson()
     val unloggedInPlayers = mutableListOf<UUID>()
     lateinit var warps: HashMap<String, LocationWrapper>
+    lateinit var botInstance: RelayBot
     lateinit var passwords: HashMap<UUID, String>
     lateinit var maintainers: ArrayList<UUID>
     lateinit var minecraftTranslation: HashMap<String, String>
@@ -77,6 +81,13 @@ class HomeEntity : JavaPlugin(), Listener {
                 }
             }.also {
                 logger.info("    ${ChatColor.GREEN}Warps loaded in $it ms")
+            }
+
+            logger.info("  Loading main")
+            measureTimeMillis {
+                saveDefaultConfig()
+            }.also {
+                logger.info("    ${ChatColor.GREEN}main loaded in $it ms")
             }
 
             logger.info("  Loading passwords")
@@ -155,6 +166,8 @@ class HomeEntity : JavaPlugin(), Listener {
 
             server.pluginManager.registerEvents(this, this)
             server.pluginManager.registerEvents(Notice, this)
+            server.pluginManager.registerEvents(PrivateHandler, this)
+            server.pluginManager.registerEvents(ShowManager, this)
 
             logger.info("  Finalizing...")
 
@@ -163,6 +176,9 @@ class HomeEntity : JavaPlugin(), Listener {
                 Notice.playerUpdateAdd(it)
             }
             logger.info("${ChatColor.GREEN}Reached goal 'initialize'")
+            logger.info("Launching Relay Bot")
+            botInstance = RelayBot(config.getLong("relay.listen"), config.getString("relay.token")!!)
+            logger.info("${ChatColor.GREEN}Reached goal 'relay'")
         }.also {
             logger.info("${ChatColor.GREEN}HomeEntity Initialized Complete in $it ms")
         }
@@ -191,7 +207,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if(command.name == "hent") {
-            sender.sendMessage("${ChatColor.GOLD} HomeEntity Version 1.3S")
+            sender.sendMessage("${ChatColor.GOLD} HomeEntity Version 1.4 Stable")
             if(sender is Player) {
                 if(args.isNotEmpty()) {
                     when(args[0]) {
@@ -221,6 +237,12 @@ class HomeEntity : JavaPlugin(), Listener {
 
         }
         return true
+    }
+
+    @EventHandler
+    fun onPlayerQuit(e: PlayerQuitEvent) {
+        e.quitMessage = "${ChatColor.GRAY}[${ChatColor.RED}-${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
+        botInstance.sendMessage("[-] ${e.player.name}")
     }
     
     @EventHandler
@@ -266,12 +288,12 @@ class HomeEntity : JavaPlugin(), Listener {
         }
         e.joinMessage = "${ChatColor.GRAY}[${ChatColor.GREEN}+${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        e.player.sendMessage("${ChatColor.GOLD}      欢迎来到.DP7 996 Days      ")
-        e.player.sendMessage("${ChatColor.AQUA}  请发送'.l <密码>'       来登录  ")
-        e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册  ")
+        e.player.sendMessage("${ChatColor.GOLD}      欢迎来到${config.getString("main.serverName")}      ")
+        e.player.sendMessage("${ChatColor.AQUA}  请发送'/l <密码>'       来登录  ")
+        e.player.sendMessage("${ChatColor.AQUA}  请发送'/r <密码> <密码>' 来注册  ")
         e.player.sendMessage("${ChatColor.RED}   <如果忘记密码请找管理员重置>  ")
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        e.player.sendMessage("${ChatColor.GRAY}P.S. 不是/.l也不是'.l是.l")
+        e.player.sendMessage("${ChatColor.GRAY}P.S. '.'和'/'做前缀都可以")
         SessionHandler.limit(e.player)
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {
@@ -284,6 +306,8 @@ class HomeEntity : JavaPlugin(), Listener {
                 }
             }
         }, 30 * 20)
+
+        botInstance.sendMessage("[+] ${e.player.name}")
     }
 
     @EventHandler
@@ -307,6 +331,10 @@ class HomeEntity : JavaPlugin(), Listener {
 
         Notice.parseMessage(e.message).forEach {
             it.sendTitle("${e.player}@你辣快去看看!", "", 10, 3 * 20, 10)
+        }
+
+        if(!e.isCancelled) {
+            botInstance.sendMessage("${e.player.name}: ${e.message}")
         }
     }
 

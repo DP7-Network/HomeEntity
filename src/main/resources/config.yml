@@ -1,0 +1,5 @@
+main:
+  serverName: "Charmless"
+relay:
+  token: ""
+  listen: 0
