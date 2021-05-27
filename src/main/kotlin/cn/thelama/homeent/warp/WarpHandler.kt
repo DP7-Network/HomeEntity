@@ -20,10 +20,11 @@ object WarpHandler : CommandExecutor {
                 }
                 if(args.isNotEmpty()) {
                     when(args[0]) {
-                        "add" -> {
-                            if(args.size < 2) {
+                        "add" -> when {
+                            args.size < 2 -> {
                                 sender.sendMessage("${ChatColor.RED}Illegal arguments! /warp add <name> [<x> <y> <z>]")
-                            } else if (args.size > 4) {
+                            }
+                            args.size > 4 -> {
                                 runCatching {
                                     if(!checkName(args[1], sender)) {
                                         sender.sendMessage("${ChatColor.RED}Failed to create a warp point!")
@@ -34,7 +35,8 @@ object WarpHandler : CommandExecutor {
                                 }.onFailure {
                                     sender.sendMessage("${ChatColor.RED}Failed to parse arguments to a double number!")
                                 }
-                            } else {
+                            }
+                            else -> {
                                 if(!checkName(args[1], sender)) {
                                     sender.sendMessage("${ChatColor.RED}Failed to create warp point!")
                                     return true
