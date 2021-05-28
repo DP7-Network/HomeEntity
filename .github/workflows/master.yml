@@ -29,4 +29,4 @@ jobs:
           artifacts: ./build/libs/HomeEntity-1.0-SNAPSHOT-all.jar
           bodyFile: ./release.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GITHUB_TOKEN }}
