@@ -1,0 +1,31 @@
+name: Master
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+    
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Update code
+      - uses: actions/checkout@v2
+      
+      # Setup env
+      - name: JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+      # Build a runnable jar
+      - name: Shadow Jar
+        run: ./gradlew shadowJar
+        
+      - name: Publish to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./build/libs/HomeEntity-1.0-SNAPSHOT-all.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
