@@ -22,10 +22,13 @@ jobs:
       # Build a runnable jar
       - name: Shadow Jar
         run: ./gradlew shadowJar
-        
+
       - name: Publish to Release
-        uses: softprops/action-gh-release@v1
+        uses: |
+          actions/checkout@v1
+          ncipollo/release-action@v1
         with:
-          files: ./build/libs/HomeEntity-1.0-SNAPSHOT-all.jar
+          artifacts: ./build/libs/HomeEntity-1.0-SNAPSHOT-all.jar
+          bodyFile: ./release.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
