@@ -23,10 +23,9 @@ jobs:
       - name: Shadow Jar
         run: ./gradlew shadowJar
 
+      - uses: actions/checkout@v1
+      - uses:  ncipollo/release-action@v1
       - name: Publish to Release
-        uses: |
-          actions/checkout@v1
-          ncipollo/release-action@v1
         with:
           artifacts: ./build/libs/HomeEntity-1.0-SNAPSHOT-all.jar
           bodyFile: ./release.md
