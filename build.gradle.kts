@@ -17,15 +17,15 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("com.github.pengrad:java-telegram-bot-api:5.1.0")
-    compileOnly(files("spigot-1.16.5.jar"))
-    compileOnly("com.comphenix.protocol:ProtocolLib:4.5.0")
+    compileOnly(files("./dependency/spigot-1.16.5.jar"))
+    compileOnly(files("./dependency/Yum.jar"))
 }
 
 tasks {
     withType<ShadowJar> {
         exclude("com.comphenix.protocol:ProtocolLib:4.5.0")
         exclude {
-            it?.file?.name == "spigot-1.16.5.jar"
+            it?.file?.name == "spigot-1.16.5.jar" || it?.file?.name == "Yum.jar"
         }
     }
 }

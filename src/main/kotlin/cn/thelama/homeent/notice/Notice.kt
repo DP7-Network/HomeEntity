@@ -20,7 +20,7 @@ object Notice : Listener {
     private val logger = Bukkit.getLogger()
 
     fun parseMessage(message: String, players: List<Player> = playerList): List<Player> {
-//        return listOf()
+        return listOf()
 //        logger.info("[Notice:MessageParse] Looking for ${players.size} name(s) in message...")
         val foundPlayers = ArrayList<Player>(1)
         val playerSize = playerList.size
@@ -71,7 +71,7 @@ object Notice : Listener {
     }
 
     fun playerUpdateAdd(player: Player) {
-//        return
+        return
         val name = player.name
         val length = name.length
         var b = true
@@ -95,7 +95,7 @@ object Notice : Listener {
     }
 
     private fun playerUpdateRemove(player: Player) {
-//        return
+        return
         logger.info("[Notice:PlayerList] A player quited: ${player.name} @${player.hashCode()}")
         playerList.forEachIndexed { index, p ->
             if (p == player) playerList.removeAt(index)

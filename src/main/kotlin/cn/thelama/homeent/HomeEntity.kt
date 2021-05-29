@@ -14,15 +14,17 @@ import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.warp.LocationWrapper
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandler
-import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.ProtocolManager
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.bukkit.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
+import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -36,16 +38,25 @@ import java.io.FileReader
 import java.io.FileWriter
 import java.io.InputStreamReader
 import java.lang.reflect.Field
+import java.net.InetSocketAddress
+import java.net.Proxy
+import java.net.URL
 import java.security.MessageDigest
 import java.util.*
 import kotlin.system.measureTimeMillis
+import pw.yumc.Yum.api.YumAPI
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
+        const val VERSION = "1.4 Stable"
+        const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
-        lateinit var protocolManager: ProtocolManager
+        lateinit var COMMIT_HASH: String
+        lateinit var BRANCH: String
+        var BUILD_NUMBER: Int = 0
     }
     private val gson = Gson()
+    private val httpClient = OkHttpClient.Builder().proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).build()
     val unloggedInPlayers = mutableListOf<UUID>()
     lateinit var warps: HashMap<String, LocationWrapper>
     lateinit var botInstance: RelayBot
@@ -58,14 +69,29 @@ class HomeEntity : JavaPlugin(), Listener {
     private lateinit var maintainersFile: File
     private lateinit var passwordsFile: File
 
-    override fun onLoad() {
-        protocolManager = ProtocolLibrary.getProtocolManager()
-    }
-
     override fun onEnable() {
-
         instance = this
-        measureTimeMillis { logger.info("<== HomeEntity 1.2 Loading ==>")
+        runCatching {
+            Properties().also {
+                it.load(this::class.java.classLoader.getResourceAsStream("BUILD.INFO"))
+                BRANCH = it.getProperty("BRANCH").replace("origin/", "")
+                COMMIT_HASH = it.getProperty("HASH")
+                BUILD_NUMBER = it.getProperty("BUILD").toInt()
+                if(it.contains("UNSTABLE")) {
+                    Bukkit.getLogger().warning("You are using a **unstable** build!")
+                }
+            }
+        }.onFailure {
+            Bukkit.getLogger().warning("Failed to get version info of this plugin!!")
+            BRANCH = "Unknown"
+            COMMIT_HASH = ""
+        }
+
+        measureTimeMillis {
+            logger.info("")
+            logger.info("")
+            logger.info("")
+            logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(7)})")
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
             }
@@ -175,6 +201,7 @@ class HomeEntity : JavaPlugin(), Listener {
                 it.setDisplayName("${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
                 Notice.playerUpdateAdd(it)
             }
+            launchCheckUpdatesTask()
             logger.info("${ChatColor.GREEN}Reached goal 'initialize'")
             logger.info("Launching Relay Bot")
             botInstance = RelayBot(config.getLong("relay.listen"), config.getString("relay.token")!!)
@@ -207,7 +234,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if(command.name == "hent") {
-            sender.sendMessage("${ChatColor.GOLD} HomeEntity Version 1.4 Stable")
+            sender.sendMessage("${ChatColor.GOLD} HomeEntity Version $VERSION")
             if(sender is Player) {
                 if(args.isNotEmpty()) {
                     when(args[0]) {
@@ -361,5 +388,38 @@ class HomeEntity : JavaPlugin(), Listener {
             false
         }
     }
+
+    private fun launchCheckUpdatesTask() {
+        val proj = when(BRANCH) {
+            "master" -> {
+                "HomeEntity"
+            }
+
+            "devel" -> {
+                "HomeEntity-devel"
+            }
+
+            else -> {
+                return
+            }
+        }
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, Runnable {
+            val req = Request.Builder().url("$JENKINS_BASE/job/$proj/lastSuccessfulBuild/api/json").get().build()
+            val rep = httpClient.newCall(req).execute().body?.string()
+            if(rep == null) {
+                return@Runnable
+            } else {
+                val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
+                if(jsonTree["number"].asInt > BUILD_NUMBER) {
+                    Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
+                    FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$proj/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
+                        Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
+                    Bukkit.broadcastMessage("更新已下载完毕！准备重载")
+                    YumAPI.reload(this)
+                }
+            }
+        }, 0, 3600 * 20)
+    }
+
 
 }
