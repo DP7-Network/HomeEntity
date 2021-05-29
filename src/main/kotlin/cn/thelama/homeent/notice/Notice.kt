@@ -7,7 +7,8 @@ import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerKickEvent
 import org.bukkit.event.player.PlayerQuitEvent
-import java.util.LinkedList
+import java.util.*
+import kotlin.NoSuchElementException
 import kotlin.collections.ArrayList
 
 /**
@@ -15,7 +16,7 @@ import kotlin.collections.ArrayList
  */
 object Notice : Listener {
     private var maxLength = 0
-    private val playerList = LinkedList<Player>()
+    private val playerList = Collections.synchronizedList(LinkedList<Player>())
     private val logger = Bukkit.getLogger()
 
     fun parseMessage(message: String, players: List<Player> = playerList): List<Player> {
@@ -89,7 +90,7 @@ object Notice : Listener {
             playerList.add(player)
             logger.info("[Notice:PlayerList] The name length is $length, at index 0")
         }
-        maxLength = playerList.last.name.length
+        maxLength = playerList.last().name.length
         logger.info("[Notice:PlayerList] Player list updated")
     }
 
@@ -101,7 +102,7 @@ object Notice : Listener {
             logger.info("[Notice:PlayerList] Player removed")
         }
         try {
-            maxLength = playerList.last.name.length
+            maxLength = playerList.last().name.length
         } catch (e: NoSuchElementException) {
             maxLength = 0
         }
