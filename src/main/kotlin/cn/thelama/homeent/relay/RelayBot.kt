@@ -15,7 +15,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 
 class RelayBot(private val groupId: Long, private val token: String) {
-    private val botInstance = TelegramBot.Builder(token).okHttpClient(OkHttpClient.Builder().proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).build()).build()
+    private val botInstance = TelegramBot.Builder(token).okHttpClient(HomeEntity.instance.httpClient).build()
 
     init {
         botInstance.setUpdatesListener({

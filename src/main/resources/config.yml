@@ -3,3 +3,9 @@ main:
 relay:
   token: ""
   listen: 0
+proxy:
+  enable: true
+  # socks or http
+  type: "SOCKS"
+  ip: "127.0.0.1"
+  port: 8889

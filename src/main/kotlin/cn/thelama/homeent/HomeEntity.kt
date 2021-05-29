@@ -56,13 +56,14 @@ class HomeEntity : JavaPlugin(), Listener {
         var BUILD_NUMBER: Int = 0
     }
     private val gson = Gson()
-    private val httpClient = OkHttpClient.Builder().proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).build()
     val unloggedInPlayers = mutableListOf<UUID>()
     lateinit var warps: HashMap<String, LocationWrapper>
     lateinit var botInstance: RelayBot
     lateinit var passwords: HashMap<UUID, String>
     lateinit var maintainers: ArrayList<UUID>
     lateinit var minecraftTranslation: HashMap<String, String>
+    lateinit var globalNetworkProxy: Proxy
+    lateinit var httpClient: OkHttpClient
     val lastTeleport: HashMap<UUID, Location> = HashMap()
 
     private lateinit var warpsFile: File
@@ -109,9 +110,23 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Warps loaded in $it ms")
             }
 
-            logger.info("  Loading main")
+            logger.info("  Loading main configuration")
             measureTimeMillis {
                 saveDefaultConfig()
+                if(this.config.getBoolean("proxy.enable")) {
+                    if(config.getString("proxy.type")!!.toLowerCase() == "socks") {
+                        this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    } else if(config.getString("proxy.type")!!.toLowerCase() == "http") {
+                        this.globalNetworkProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    } else {
+                        logger.info("    ${ChatColor.RED}无法确认你的代理类型是什么 :(")
+                        this.globalNetworkProxy = Proxy.NO_PROXY
+                    }
+                } else {
+                    this.globalNetworkProxy = Proxy.NO_PROXY
+                }
+
+                httpClient = OkHttpClient.Builder().proxy(globalNetworkProxy).build()
             }.also {
                 logger.info("    ${ChatColor.GREEN}main loaded in $it ms")
             }
@@ -235,16 +250,8 @@ class HomeEntity : JavaPlugin(), Listener {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if(command.name == "hent") {
             sender.sendMessage("${ChatColor.GOLD} HomeEntity Version $VERSION")
-            if(sender is Player) {
-                if(args.isNotEmpty()) {
-                    when(args[0]) {
-                        else -> {
-                            sender.sendMessage("/hent 中指令均处于Beta状态，不仅没有自动补全，且不稳定，说不准哪天就出BUG了呢")
-                        }
-                    }
-                }
-            } else if(sender is ConsoleCommandSender) {
-                if(args.isNotEmpty()) {
+            if(args.isNotEmpty()) {
+                if(sender is ConsoleCommandSender) {
                     when(args[0]) {
                         "crash" -> {
                             Bukkit.getWorlds().forEach { it.save() }
@@ -253,14 +260,12 @@ class HomeEntity : JavaPlugin(), Listener {
                             }
                             (f.get(null) as Unsafe).putAddress(0, 0)
                         }
-
-                        else -> {
-                            sender.sendMessage("/hent 中指令均处于Beta状态，不仅没有自动补全，且不稳定，说不准哪天就出BUG了呢")
-                        }
                     }
-
                 }
+            } else {
+                sender.sendMessage("${ChatColor.AQUA}HomeEntity ${ChatColor.RESET}- ${ChatColor.GREEN}$VERSION ${ChatColor.RESET}| ${ChatColor.ITALIC}${ChatColor.YELLOW}Build $BUILD_NUMBER $BRANCH@${COMMIT_HASH.substring(7)}")
             }
+
 
         }
         return true
@@ -404,22 +409,24 @@ class HomeEntity : JavaPlugin(), Listener {
             }
         }
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, Runnable {
-            val req = Request.Builder().url("$JENKINS_BASE/job/$proj/lastSuccessfulBuild/api/json").get().build()
-            val rep = httpClient.newCall(req).execute().body?.string()
-            if(rep == null) {
-                return@Runnable
-            } else {
-                val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
-                if(jsonTree["number"].asInt > BUILD_NUMBER) {
-                    Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
-                    FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$proj/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
-                        Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
-                    Bukkit.broadcastMessage("更新已下载完毕！准备重载")
-                    YumAPI.reload(this)
-                }
-            }
+            tryUpdate(proj)
         }, 0, 3600 * 20)
     }
 
-
+    private fun tryUpdate(stream: String) {
+        val req = Request.Builder().url("$JENKINS_BASE/job/$stream/lastSuccessfulBuild/api/json").get().build()
+        val rep = httpClient.newCall(req).execute().body?.string()
+        if(rep == null) {
+            return
+        } else {
+            val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
+            if(jsonTree["number"].asInt > BUILD_NUMBER) {
+                Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
+                FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$stream/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
+                    Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
+                Bukkit.broadcastMessage("更新已下载完毕！准备重载")
+                YumAPI.reload(this)
+            }
+        }
+    }
 }
