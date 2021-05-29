@@ -2,7 +2,8 @@
 
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
-
+[![DevelBuild](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity-Devel%2F&label=Devel%20Build)](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity-Devel%2F&label=Devel%20Build)
+[![StableBuild](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity%2F&label=Stable%20Build)](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity%2F&label=Stable%20Build)
 ```
 A wonderful minecraft server utils code in kotlin
 

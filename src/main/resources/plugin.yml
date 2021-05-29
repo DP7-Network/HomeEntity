@@ -1,7 +1,6 @@
 name: "HomeEntity"
 main: "cn.thelama.homeent.HomeEntity"
 version: 1.4
-depend: [ProtocolLib]
 commands:
   hent:
 
