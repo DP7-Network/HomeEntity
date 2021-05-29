@@ -56,13 +56,14 @@ class HomeEntity : JavaPlugin(), Listener {
         var BUILD_NUMBER: Int = 0
     }
     private val gson = Gson()
-    private val httpClient = OkHttpClient.Builder().proxy(Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).build()
     val unloggedInPlayers = mutableListOf<UUID>()
     lateinit var warps: HashMap<String, LocationWrapper>
     lateinit var botInstance: RelayBot
     lateinit var passwords: HashMap<UUID, String>
     lateinit var maintainers: ArrayList<UUID>
     lateinit var minecraftTranslation: HashMap<String, String>
+    lateinit var globalNetworkProxy: Proxy
+    lateinit var httpClient: OkHttpClient
     val lastTeleport: HashMap<UUID, Location> = HashMap()
 
     private lateinit var warpsFile: File
@@ -109,9 +110,23 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Warps loaded in $it ms")
             }
 
-            logger.info("  Loading main")
+            logger.info("  Loading main configuration")
             measureTimeMillis {
                 saveDefaultConfig()
+                if(this.config.getBoolean("proxy.enable")) {
+                    if(config.getString("proxy.type")!!.toLowerCase() == "socks") {
+                        this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    } else if(config.getString("proxy.type")!!.toLowerCase() == "http") {
+                        this.globalNetworkProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    } else {
+                        logger.info("    ${ChatColor.RED}无法确认你的代理类型是什么 :(")
+                        this.globalNetworkProxy = Proxy.NO_PROXY
+                    }
+                } else {
+                    this.globalNetworkProxy = Proxy.NO_PROXY
+                }
+
+                httpClient = OkHttpClient.Builder().proxy(globalNetworkProxy).build()
             }.also {
                 logger.info("    ${ChatColor.GREEN}main loaded in $it ms")
             }
