@@ -11,6 +11,7 @@ import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
 import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
+import cn.thelama.homeent.tpa.*
 import cn.thelama.homeent.warp.LocationWrapper
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandler
@@ -48,7 +49,7 @@ import pw.yumc.Yum.api.YumAPI
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.4 Stable"
+        const val VERSION = "1.4.2 Devel"
         const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
@@ -203,6 +204,29 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Command slime registered successfully")
             }
 
+            this.getCommand("tpa")!!.apply {
+                setExecutor(TPAHandler)
+                tabCompleter = TPACompleter
+                logger.info("    ${ChatColor.GREEN}Command tpa registered successfully")
+            }
+
+            this.getCommand("tphere")!!.apply {
+                setExecutor(TPHereHandler)
+                tabCompleter = TPACompleter
+                logger.info("    ${ChatColor.GREEN}Command tphere registered successfully")
+            }
+
+            this.getCommand("tpaccept")!!.apply {
+                setExecutor(TPAcceptHandler)
+                logger.info("    ${ChatColor.GREEN}Command tpaccept registered successfully")
+            }
+
+            this.getCommand("tpdeny")!!.apply {
+                setExecutor(TPDenyHandler)
+                logger.info("    ${ChatColor.GREEN}Command tpdeny registered successfully")
+            }
+
+
             logger.info("  Register events...")
 
             server.pluginManager.registerEvents(this, this)
@@ -249,7 +273,6 @@ class HomeEntity : JavaPlugin(), Listener {
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
         if(command.name == "hent") {
-            sender.sendMessage("${ChatColor.GOLD} HomeEntity Version $VERSION")
             if(args.isNotEmpty()) {
                 if(sender is ConsoleCommandSender) {
                     when(args[0]) {
@@ -259,6 +282,14 @@ class HomeEntity : JavaPlugin(), Listener {
                                 isAccessible = true
                             }
                             (f.get(null) as Unsafe).putAddress(0, 0)
+                        }
+
+                        "sync" -> {
+                            if(args.size > 2) {
+                                tryUpdate(args[1], true)
+                            } else {
+                                sender.sendMessage("/hent sync <UpdateStream(HomeEntity|HomeEntity-Devel)>")
+                            }
                         }
                     }
                 }
@@ -413,14 +444,14 @@ class HomeEntity : JavaPlugin(), Listener {
         }, 0, 3600 * 20)
     }
 
-    private fun tryUpdate(stream: String) {
+    private fun tryUpdate(stream: String, sync: Boolean = false) {
         val req = Request.Builder().url("$JENKINS_BASE/job/$stream/lastSuccessfulBuild/api/json").get().build()
         val rep = httpClient.newCall(req).execute().body?.string()
         if(rep == null) {
             return
         } else {
             val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
-            if(jsonTree["number"].asInt > BUILD_NUMBER) {
+            if(jsonTree["number"].asInt > BUILD_NUMBER || sync) {
                 Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
                 FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$stream/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
                     Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
