@@ -12,7 +12,8 @@ Do you want join us?
    Join Us on Telegram -> https://t.me/joinchat/SQh32oidbCM92uy
 ```
 ---
-### 使用:
+使用:
+---
 ```
   注: 被<>括起来的参数代表该参数为必填
       被[]括起来的参数代表选填
@@ -40,5 +41,9 @@ Do you want join us?
   7. !p <玩家名字> [文本] 加密通话，只有你和目标能看到，服务器后台都看不见（不是/p!!!!）
 
 ```
-
- 
+更新计划:
+---
++ 更改TelegramAPI支持库到 InsanusMokrassar/TelegramBotAPI ⭕
++ TPA ✅
++ 全部可配置化 ⭕
++ 更改版本检查方法到git commit ⭕
