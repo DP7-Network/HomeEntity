@@ -285,7 +285,7 @@ class HomeEntity : JavaPlugin(), Listener {
                         }
 
                         "sync" -> {
-                            if(args.size > 2) {
+                            if(args.size >= 2) {
                                 tryUpdate(args[1], true)
                             } else {
                                 sender.sendMessage("/hent sync <UpdateStream(HomeEntity|HomeEntity-Devel)>")
