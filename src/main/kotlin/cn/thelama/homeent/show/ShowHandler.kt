@@ -77,8 +77,8 @@ object ShowHandler : CommandExecutor {
         val base = ComponentBuilder("${ChatColor.GREEN}${sender.name} 展示了他的 ")
         val msg = ComponentBuilder("${ChatColor.AQUA}[${parseMetaName(item.itemMeta, CraftItemStack.asNMSCopy(item))}]")
         msg.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/show byid ${ShowManager.createDisplay(item)}")
-        base.append(msg.create())
-        Bukkit.getOnlinePlayers().forEach { it.spigot().sendMessage(*base.create()) }
+        val d = base.append(msg.create()).create()
+        Bukkit.getOnlinePlayers().forEach { it.spigot().sendMessage(*d) }
     }
 
     private fun parseMetaName(meta: ItemMeta?, nmsItem: net.minecraft.server.v1_16_R3.ItemStack): String {
