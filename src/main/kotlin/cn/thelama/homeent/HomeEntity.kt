@@ -230,7 +230,6 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("  Register events...")
 
             server.pluginManager.registerEvents(this, this)
-            server.pluginManager.registerEvents(Notice, this)
             server.pluginManager.registerEvents(PrivateHandler, this)
             server.pluginManager.registerEvents(ShowManager, this)
 
@@ -238,7 +237,6 @@ class HomeEntity : JavaPlugin(), Listener {
 
             server.onlinePlayers.forEach {
                 it.setDisplayName("${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
-                Notice.playerUpdateAdd(it)
             }
             launchCheckUpdatesTask()
             logger.info("${ChatColor.GREEN}Reached goal 'initialize'")

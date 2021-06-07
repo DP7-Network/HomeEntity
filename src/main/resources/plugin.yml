@@ -16,6 +16,8 @@ commands:
 
   slime:
 
+  prefix:
+
   tpa:
 
   tphere:
