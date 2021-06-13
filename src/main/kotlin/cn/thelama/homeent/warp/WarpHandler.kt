@@ -22,7 +22,7 @@ object WarpHandler : CommandExecutor {
                     when(args[0]) {
                         "add" -> when {
                             args.size < 2 -> {
-                                sender.sendMessage("${ChatColor.RED}Illegal arguments! /warp add <name> [<x> <y> <z>]")
+                                sender.sendMessage("${ChatColor.RED}Illegal arguments! Please use ${ChatColor.GOLD}/warp add <name> [<x> <y> <z>]")
                             }
                             args.size > 4 -> {
                                 runCatching {
@@ -31,7 +31,7 @@ object WarpHandler : CommandExecutor {
                                         return true
                                     }
                                     HomeEntity.instance.warps[args[1]] = LocationWrapper(sender.world.uid, args[2].toDouble(), args[3].toDouble(), args[4].toDouble())
-                                    sender.sendMessage("${ChatColor.GREEN}Successfully created warp: '${args[1]}'")
+                                    sender.sendMessage("${ChatColor.GREEN}Successfully created warp: ${ChatColor.GOLD}${args[1]}")
                                 }.onFailure {
                                     sender.sendMessage("${ChatColor.RED}Failed to parse arguments to a double number!")
                                 }
@@ -42,23 +42,43 @@ object WarpHandler : CommandExecutor {
                                     return true
                                 }
                                 HomeEntity.instance.warps[args[1]] = LocationWrapper(sender.world.uid, sender.location.x, sender.location.y, sender.location.z)
-                                sender.sendMessage("${ChatColor.GREEN}Successfully created warp: '${args[1]}'")
+                                sender.sendMessage("${ChatColor.GREEN}Successfully created warp: ${ChatColor.GOLD}${args[1]}")
                             }
                         }
 
                         "del" -> {
                             if(args.size > 1) {
                                 HomeEntity.instance.warps.remove(args[1])
-                                sender.sendMessage("${ChatColor.GREEN}Deleted!")
+                                sender.sendMessage("${ChatColor.GREEN}Successfully deleted warp: ${ChatColor.GOLD}${args[1]}")
                             } else {
-                                sender.sendMessage("${ChatColor.RED}Illegal arguments! /warp del <name>")
+                                sender.sendMessage("${ChatColor.RED}Illegal arguments! Please use ${ChatColor.GOLD}/warp del <name>")
                             }
                         }
 
                         "list" -> {
-                            sender.sendMessage("${ChatColor.GREEN}Server warps: ")
-                            HomeEntity.instance.warps.forEach { (name, loc) ->
-                                sender.sendMessage("  $name is at '${loc.toLoc().world?.name}' x: ${floor(loc.x)} y: ${floor(loc.y)} z: ${floor(loc.z)}")
+                            var warps: HashMap<String, LocationWrapper> = HomeEntity.instance.warps
+                            if (args.size > 1 && args[1].isNotEmpty()) {
+                                //筛选关键词 TODO 多关键词支持
+                                val keyWord = args[1]
+                                val tmp: HashMap<String, LocationWrapper> = HashMap()
+                                warps.forEach { (name, loc) ->
+                                    val nameSplit = name.split(keyWord.toRegex(), 2)
+                                    if (nameSplit.size == 2) {
+                                        val newName = nameSplit[0] + ChatColor.RED + ChatColor.BOLD + keyWord + ChatColor.RESET + ChatColor.GOLD + nameSplit[1]
+                                        tmp[newName] = loc
+                                    }
+                                }
+                                warps = tmp
+                            }
+                            else sender.sendMessage("${ChatColor.GOLD}All warps:")
+                            warps.forEach { (name, loc) ->
+                                sender.sendMessage(
+                                    ("${ChatColor.GOLD}$name${ChatColor.RESET}" +
+                                     " in ${ChatColor.ITALIC}${ChatColor.GRAY}${loc.toLoc().world?.name}${ChatColor.RESET}" +
+                                     " at ${ChatColor.UNDERLINE}${floor(loc.x)}${ChatColor.RESET}, " +
+                                         "${ChatColor.UNDERLINE}${floor(loc.y)}${ChatColor.RESET}, " +
+                                         "${ChatColor.UNDERLINE}${floor(loc.z)}"
+                                    ).trimIndent())
                             }
                         }
 
