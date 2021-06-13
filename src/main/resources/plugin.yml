@@ -25,3 +25,5 @@ commands:
   tpaccept:
 
   tpdeny:
+
+  relay:

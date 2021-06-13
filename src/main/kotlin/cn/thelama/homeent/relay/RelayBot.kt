@@ -7,17 +7,18 @@ import com.pengrad.telegrambot.UpdatesListener
 import com.pengrad.telegrambot.request.BaseRequest
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.response.BaseResponse
-import okhttp3.OkHttpClient
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import java.io.IOException
-import java.net.InetSocketAddress
-import java.net.Proxy
 
 class RelayBot(private val groupId: Long, private val token: String) {
-    private val botInstance = TelegramBot.Builder(token).okHttpClient(HomeEntity.instance.httpClient).build()
+    private val botInstance: TelegramBot = TelegramBot.Builder(token).okHttpClient(HomeEntity.instance.httpClient).build()
 
     init {
+        setUpdateListener()
+    }
+
+    private fun setUpdateListener() {
         botInstance.setUpdatesListener({
             it.forEach { update ->
                 if(update.message() == null) {
@@ -67,6 +68,11 @@ class RelayBot(private val groupId: Long, private val token: String) {
                 })
             }))
         }
+    }
+
+    fun restartBot() {
+        TODO("未完成的重启功能")
+        //干掉正在运行的网络Client并重新初始化对象
     }
 
     private fun <T : BaseRequest<T, R>, R : BaseResponse> callback(res: (BaseRequest<T, R>, BaseResponse) -> Unit, fail: (BaseRequest<*, *>, IOException?) -> Unit): Callback<T, R> {
