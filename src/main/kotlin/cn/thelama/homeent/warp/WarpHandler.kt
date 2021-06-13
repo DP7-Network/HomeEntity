@@ -68,9 +68,11 @@ object WarpHandler : CommandExecutor {
                                         tmp[newName] = loc
                                     }
                                 }
+                                if (tmp.isEmpty()) sender.sendMessage("${ChatColor.RED}No warp found!")
+                                else sender.sendMessage("${ChatColor.BOLD}${ChatColor.GOLD}Found ${ChatColor.RED}$keyWord${ChatColor.GOLD} in ${tmp.size} warp(s):")
                                 warps = tmp
                             }
-                            else sender.sendMessage("${ChatColor.GOLD}All warps:")
+                            else sender.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}All warps:")
                             warps.forEach { (name, loc) ->
                                 sender.sendMessage(
                                     ("${ChatColor.GOLD}$name${ChatColor.RESET}" +
@@ -84,7 +86,7 @@ object WarpHandler : CommandExecutor {
 
                         "lookup" -> {
                             if(args.size < 2) {
-                                sender.sendMessage("${ChatColor.RED}Illegal arguments! /warp lookup <name>")
+                                sender.sendMessage("${ChatColor.RED}Illegal arguments! Please use ${ChatColor.GOLD}/warp lookup <name>")
                             } else {
                                 if(HomeEntity.instance.warps.containsKey(args[1])) {
                                     val loc = HomeEntity.instance.warps[args[1]]!!
