@@ -62,7 +62,7 @@ object WarpHandler : CommandExecutor {
                                 val keyWord = args[1]
                                 val tmp: HashMap<String, LocationWrapper> = HashMap()
                                 warps.forEach { (name, loc) ->
-                                    val nameSplit = name.split(keyWord.toRegex(), 2)
+                                    val nameSplit = name.split(keyWord, ignoreCase = true, limit = 2)
                                     if (nameSplit.size == 2) {
                                         val newName = nameSplit[0] + ChatColor.RED + ChatColor.BOLD + keyWord + ChatColor.RESET + ChatColor.GOLD + nameSplit[1]
                                         tmp[newName] = loc
