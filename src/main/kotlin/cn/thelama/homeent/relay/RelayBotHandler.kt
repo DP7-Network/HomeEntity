@@ -5,19 +5,18 @@ import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
+import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.entity.Player
 
 object RelayBotHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if (command.name == "relay") {
-            if (args.isNotEmpty()) when (args[0]) {
+            if (args.isNotEmpty() && (sender is ConsoleCommandSender || (sender is Player && sender.uniqueId in HomeEntity.instance.maintainers))) when (args[0]) {
                 "restart" -> {
-                    val bot: RelayBot = HomeEntity.instance.botInstance;
-                    bot.restartBot();
+                    val bot: RelayBot = HomeEntity.instance.botInstance
+                    bot.restartBot()
                 }
-            //TODO Other functions
             }
-            else sender.sendMessage("${ChatColor.RED}This command need an argument!")
-
         }
         return true
     }
