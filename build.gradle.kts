@@ -15,9 +15,13 @@ repositories {
 }
 
 dependencies {
+    val tgBotApiVersion = "0.35.0"
+    val serverJarPath = files("./dependency/spigot-1.16.5.jar")
+
     implementation(kotlin("stdlib"))
     implementation("com.github.pengrad:java-telegram-bot-api:5.1.0")
-    compileOnly(files("./dependency/spigot-1.16.5.jar"))
+    implementation("dev.inmo:tgbotapi:$tgBotApiVersion")
+    compileOnly(serverJarPath)
     compileOnly(files("./dependency/Yum.jar"))
 }
 

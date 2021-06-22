@@ -6,6 +6,7 @@ import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
 import cn.thelama.homeent.relay.RelayBot
+import cn.thelama.homeent.relay.RelayBotHandler
 import cn.thelama.homeent.session.SessionHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
@@ -394,7 +395,7 @@ class HomeEntity : JavaPlugin(), Listener {
             it.sendTitle("${ChatColor.YELLOW}有人提到你", "${ChatColor.YELLOW}${e.player.name}${ChatColor.WHITE} 在聊天消息中提到了你，快去看看", 10, 3 * 20, 10)
         }
 
-        if(!e.isCancelled) {
+        if(!e.isCancelled && !RelayBotHandler.isDisabled(e.player.uniqueId)) {
             botInstance.sendMessage("${e.player.name}: ${e.message}")
         }
     }

@@ -17,7 +17,7 @@ object SlimeHandler : CommandExecutor {
                     kotlin.runCatching {
                         val iBound = args[0].toInt()
                         if(abs(iBound) > 10) {
-                            sender.sendMessage("${ChatColor.RED}请输入一个**合理**的数字范围好吧...")
+                            sender.sendMessage("${ChatColor.RED}请输入一个${ChatColor.BOLD}合理${ChatColor.RESET}${ChatColor.RED}的数字范围...")
                             return true
                         }
                         Bukkit.getScheduler().runTaskAsynchronously(HomeEntity.instance, Runnable {
@@ -30,16 +30,16 @@ object SlimeHandler : CommandExecutor {
                                     val chunk = sender.world.getChunkAt(baseX + x, baseY + z)
                                     val center = chunk.getBlock(8, 64, 8)
                                     if(chunk.isSlimeChunk) {
-                                        sender.sendMessage("${ChatColor.GREEN} 已找到史莱姆区块：${center.x} ~ ${center.z}")
+                                        sender.sendMessage("已找到史莱姆区块：${ChatColor.BOLD}${ChatColor.YELLOW}${center.x} ~ ${center.z}")
                                     }
                                 }
                             }
                         })
                     }.onFailure {
-                        sender.sendMessage("${ChatColor.RED}请输入一个合理的**数字**范围好吧...")
+                        sender.sendMessage("${ChatColor.RED}请输入一个合理的${ChatColor.BOLD}数字${ChatColor.RESET}${ChatColor.RED}范围...")
                     }
                 } else {
-                    sender.sendMessage("${ChatColor.RED}请确定一个搜索范围啊 /slime <范围>")
+                    sender.sendMessage("${ChatColor.RED}请确定一个搜索范围: ${ChatColor.GOLD}/slime <范围>")
                 }
             } else {
                 sender.sendMessage("${ChatColor.RED}Only Players can run this command")
