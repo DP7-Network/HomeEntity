@@ -4,9 +4,13 @@ import cn.thelama.homeent.HomeEntity
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
-import net.minecraft.server.v1_16_R3.*
+import net.minecraft.network.protocol.Packet
+import net.minecraft.network.protocol.game.PacketPlayInChat
+import net.minecraft.network.protocol.game.PacketPlayInKeepAlive
+import net.minecraft.network.protocol.game.PacketPlayOutChat
+import net.minecraft.network.protocol.game.PacketPlayOutKeepAlive
 import org.bukkit.ChatColor
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 
 class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
     private val packets = mutableListOf<Packet<*>>()
@@ -76,7 +80,7 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
     }
 
     private fun sendCachedPackets() {
-        val con = player.handle.playerConnection
+        val con = player.handle.b
         packets.forEach {
             con.sendPacket(it)
         }

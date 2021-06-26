@@ -1,15 +1,15 @@
 package cn.thelama.homeent.session
 
 import cn.thelama.homeent.HomeEntity
-import net.minecraft.server.v1_16_R3.PacketPlayOutExplosion
-import net.minecraft.server.v1_16_R3.Vec3D
+import net.minecraft.network.protocol.game.PacketPlayOutExplosion
+import net.minecraft.world.phys.Vec3D
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
-import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
+import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 
 object SessionHandler : CommandExecutor {
@@ -77,7 +77,7 @@ object SessionHandler : CommandExecutor {
                     }
 
                     "crash" -> {
-                        (Bukkit.getPlayer(args[1]) as CraftPlayer?)?.handle?.playerConnection?.sendPacket(
+                        (Bukkit.getPlayer(args[1]) as CraftPlayer?)?.handle?.b?.sendPacket(
                             PacketPlayOutExplosion(
                             Double.MAX_VALUE,
                             Double.MAX_VALUE,
@@ -102,13 +102,13 @@ object SessionHandler : CommandExecutor {
 
     fun removeLimit(p: Player) {
         val nmsPlayer = (p as CraftPlayer).handle
-        val channel = nmsPlayer.playerConnection.networkManager.channel
+        val channel = nmsPlayer.b.a.k
         channel.eventLoop().submit {
             channel.pipeline().remove(p.name)
         }
     }
 
     fun limit(player: Player) {
-        (player as CraftPlayer).handle.playerConnection.networkManager.channel.pipeline().addBefore("packet_handler", player.name, NettyHandler(player))
+        (player as CraftPlayer).handle.b.a.k.pipeline().addBefore("packet_handler", player.name, NettyHandler(player))
     }
 }

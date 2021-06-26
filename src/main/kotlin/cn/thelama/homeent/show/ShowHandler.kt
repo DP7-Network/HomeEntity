@@ -3,17 +3,12 @@ package cn.thelama.homeent.show
 import cn.thelama.homeent.HomeEntity
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
-import net.md_5.bungee.api.chat.HoverEvent
-import net.md_5.bungee.api.chat.ItemTag
-import net.md_5.bungee.api.chat.hover.content.Item
-import net.md_5.bungee.api.chat.hover.content.Text
-import net.minecraft.server.v1_16_R3.NBTTagCompound
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
-import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftItemStack
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
@@ -81,7 +76,7 @@ object ShowHandler : CommandExecutor {
         Bukkit.getOnlinePlayers().forEach { it.spigot().sendMessage(*d) }
     }
 
-    private fun parseMetaName(meta: ItemMeta?, nmsItem: net.minecraft.server.v1_16_R3.ItemStack): String {
+    private fun parseMetaName(meta: ItemMeta?, nmsItem: net.minecraft.world.item.ItemStack): String {
         if(meta == null) {
             return "${ChatColor.RED}Unit${ChatColor.AQUA}"
         }
