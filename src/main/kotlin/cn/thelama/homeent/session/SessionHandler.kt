@@ -13,8 +13,6 @@ import org.bukkit.craftbukkit.v1_16_R3.entity.CraftPlayer
 import org.bukkit.entity.Player
 
 object SessionHandler : CommandExecutor {
-    private val offset = -2..2
-
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(command.name == "session" && ((sender is Player && sender.uniqueId in HomeEntity.instance.maintainers) || sender is ConsoleCommandSender)) {
             if(sender is Player) {

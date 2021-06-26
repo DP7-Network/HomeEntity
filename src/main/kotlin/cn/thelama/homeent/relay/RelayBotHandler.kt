@@ -19,8 +19,7 @@ object RelayBotHandler : CommandExecutor {
                         return true
                     }
 
-                    val bot: RelayBot = HomeEntity.instance.botInstance
-                    bot.restartBot()
+                    HomeEntity.instance.botInstance.restartBot()
                 }
 
                 "on" -> {
