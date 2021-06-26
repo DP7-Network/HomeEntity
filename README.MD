@@ -50,6 +50,11 @@ A wonderful minecraft server utils, which is written in Kotlin
 - !p `<玩家名字>` `[文本]` *加密通信，只有你和目标玩家能看到，服务器后台都看不见 (**不是/p**)*
 - /tpa `<玩家名字>` *发送一个传送到另一个玩家的请求*
 - /tphere `<玩家名字>` *发送一个传送另一个玩家 **到这里** 的请求*
+- /relay `<on|off|status|toggle>` *控制聊天消息同步功能*
+	- on *显示 Telegram 同步消息*
+	- off *不显示 Telegram 同步消息*
+	- status *查看自己的消息同步状态*
+	- toggle *切换 同步/不同步 自己的消息到 Telegram*
 
 #### 请勿使用
 
@@ -60,7 +65,7 @@ A wonderful minecraft server utils, which is written in Kotlin
 
 ## 更新计划
 
-+ 更改 TelegramAPI 支持库到 InsanusMokrassar/TelegramBotAPI ⭕
++ 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI ⭕
 + TPA ✅
 + 全部可配置化 ⭕
 + 更改版本检查方法到 git commit ⭕
