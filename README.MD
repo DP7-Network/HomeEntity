@@ -1,19 +1,16 @@
-# HomeEntity
+# HomeEntity 
 
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
-[![DevelBuild](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity-Devel%2F&label=Devel%20Build)](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity-Devel%2F&label=Devel%20Build)
-[![StableBuild](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity%2F&label=Stable%20Build)](https://img.shields.io/jenkins/build?jobUrl=https%3A%2F%2Fci.thelama.cn%2Fjob%2FHomeEntity%2F&label=Stable%20Build)
 [![Server](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/2704ba23.123nat.com:26588 )](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/2704ba23.123nat.com:26588)
 
-A wonderful minecraft server utils, which is written in Kotlin
+Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天群: [Telegram](https://t.me/joinchat/raRF9e8WOs84NzM1)
 
-- Do you want to join us?
-	- Telegram -> https://t.me/joinchat/SQh32oidbCM92uy
-	- Discord -> https://discord.gg/SffQRJpfWW
+**关于服务器插件自动更新没了: 因为CI拥有者Lama3L9R家境贫寒没钱续费导致服务器无了. 正在尝试切换到免费的CI**
 
-## 使用
-
+---
+各种指令使用方法
+---
 注:
 - 被<>括起来的参数代表该参数为必填
 - 被[]括起来的参数代表选填(可不填)
@@ -27,8 +24,8 @@ A wonderful minecraft server utils, which is written in Kotlin
 
 #### 验证后可用
 
-- /hent `[sync]` `[...]` *如果参数为空或无法处理则输出版本号*
-	- sync `<HomeEntity|HomeEntity-Devel>` *从指定行项目更新插件*
+- /hent `[sync]` `[...]` *如果参数为空或无法处理则输出版本号* 
+	- **暂时无法使用** sync `<HomeEntity|HomeEntity-Devel>` *从指定行项目更新插件*
 - /warp `<名字|list|lookup|add|del>` *传送到一个设置的位置*
 	- list *列出全部可以传送的warp点 (加关键词参数启用筛选器, 如 `/warp list lsp` )*
 	- lookup *查询一个可以传送的点*
@@ -58,21 +55,26 @@ A wonderful minecraft server utils, which is written in Kotlin
 
 #### 请勿使用
 
-**请不要直接使用这些指令，也不要询问开发人员如何使用，正常游戏中没有必要使用**
+**请不要直接使用这些指令，也不要询问开发人员如何使用，正常游戏中没有必要直接使用**
 
 - /tpaccept <go|here> <uuid> 接受tpa/tphere请求
 - /tpdeny <go|here> <uuid> 拒绝tpa/tphere请求
 
 ## 更新计划
 
-+ 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI ⭕
-+ TPA ✅
-+ 全部可配置化 ⭕
-+ 更改版本检查方法到 git commit ⭕
-+ 外置第三方登录 ⭕
-+ TG玩家绑定 ⭕
-+ TG执行指令 ⭕
-+ TG访问后台 ⭕
+- 核心功能
+  - 加急
+	+ [ ] 切换到免费的CI并恢复自动更新
+  + [ ] 翻新warp功能, 适配群投票中决定的更新内容 
+  + [x] TPA
+  + [ ] 全部可配置化
+  + [ ] 更改版本检查方法到 git commit
+  + [ ] WIP 外置第三方登录 -> [HomeEntity-Yggdrasil](https://github.com/DP7-Network/HomeEntity-Yggdrasil)
+- RelayBot
+  + [x] 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI
+  + [ ] TG玩家绑定
+  + [ ] TG执行指令
+  + [ ] TG访问后台
 
 ## 贡献代码
 

@@ -56,7 +56,7 @@ import pw.yumc.Yum.api.YumAPI
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.4.2 Devel"
+        const val VERSION = "1.5 Pre-Stable"
         const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
@@ -100,7 +100,11 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("")
             logger.info("")
             logger.info("")
-            logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(7)})")
+            logger.runCatching {
+                info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
+            }.onFailure {
+                logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION (???@???")
+            }
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
             }
@@ -250,8 +254,11 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("${ChatColor.GREEN}Reached goal 'initialize'")
             logger.info("Launching Relay Bot")
             botInstance = if(config.getBoolean("relay.v2")) {
+                logger.info("  Launching Relay bot v2")
                 RelayBotV2(config.getLong("relay.listen"), config.getString("relay.token")!!)
             } else {
+                logger.info("  Launching Relay bot v1")
+                logger.warning("  You are using a deprecated feature!")
                 RelayBotV1(config.getLong("relay.listen"), config.getString("relay.token")!!)
             }
             logger.info("${ChatColor.GREEN}Reached goal 'relay'")
@@ -273,7 +280,7 @@ class HomeEntity : JavaPlugin(), Listener {
         logger.info("Shutting down relay bot...")
         GlobalScope.launch {
             botInstance.shutdown()
-        }.wait()
+        }
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")
     }
 
