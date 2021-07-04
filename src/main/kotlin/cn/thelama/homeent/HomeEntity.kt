@@ -5,8 +5,10 @@ import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
-import cn.thelama.homeent.relay.RelayBot
+import cn.thelama.homeent.relay.Relay
+import cn.thelama.homeent.relay.RelayBotV1
 import cn.thelama.homeent.relay.RelayBotHandler
+import cn.thelama.homeent.relay.RelayBotV2
 import cn.thelama.homeent.session.SessionHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
@@ -19,8 +21,12 @@ import cn.thelama.homeent.warp.WarpHandler
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.internal.wait
 import org.bukkit.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -50,7 +56,7 @@ import pw.yumc.Yum.api.YumAPI
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.4.2 Devel"
+        const val VERSION = "1.5 Pre-Stable"
         const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
@@ -60,7 +66,7 @@ class HomeEntity : JavaPlugin(), Listener {
     private val gson = Gson()
     val unloggedInPlayers = mutableListOf<UUID>()
     lateinit var warps: HashMap<String, LocationWrapper>
-    lateinit var botInstance: RelayBot
+    lateinit var botInstance: Relay
     lateinit var passwords: HashMap<UUID, String>
     lateinit var maintainers: ArrayList<UUID>
     lateinit var minecraftTranslation: HashMap<String, String>
@@ -94,7 +100,11 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("")
             logger.info("")
             logger.info("")
-            logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(7)})")
+            logger.runCatching {
+                info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
+            }.onFailure {
+                logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION (???@???")
+            }
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
             }
@@ -239,16 +249,25 @@ class HomeEntity : JavaPlugin(), Listener {
             server.onlinePlayers.forEach {
                 it.setDisplayName("${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
             }
-            launchCheckUpdatesTask()
+            //launchCheckUpdatesTask()
+            logger.info("${ChatColor.RED}因为lama穷导致CI没钱续费 :( 自动更新无了")
             logger.info("${ChatColor.GREEN}Reached goal 'initialize'")
             logger.info("Launching Relay Bot")
-            botInstance = RelayBot(config.getLong("relay.listen"), config.getString("relay.token")!!)
+            botInstance = if(config.getBoolean("relay.v2")) {
+                logger.info("  Launching Relay bot v2")
+                RelayBotV2(config.getLong("relay.listen"), config.getString("relay.token")!!)
+            } else {
+                logger.info("  Launching Relay bot v1")
+                logger.warning("  You are using a deprecated feature!")
+                RelayBotV1(config.getLong("relay.listen"), config.getString("relay.token")!!)
+            }
             logger.info("${ChatColor.GREEN}Reached goal 'relay'")
         }.also {
             logger.info("${ChatColor.GREEN}HomeEntity Initialized Complete in $it ms")
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun onDisable() {
         logger.info("Shutting down HomeEntity...")
         logger.info("  Save data...")
@@ -258,6 +277,10 @@ class HomeEntity : JavaPlugin(), Listener {
         writeFile(passwordsFile, gson.toJson(passwords))
         logger.info("    Saving maintainers")
         writeFile(maintainersFile, gson.toJson(maintainers))
+        logger.info("Shutting down relay bot...")
+        GlobalScope.launch {
+            botInstance.shutdown()
+        }
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")
     }
 
@@ -295,8 +318,6 @@ class HomeEntity : JavaPlugin(), Listener {
             } else {
                 sender.sendMessage("${ChatColor.AQUA}HomeEntity ${ChatColor.RESET}- ${ChatColor.GREEN}$VERSION ${ChatColor.RESET}| ${ChatColor.ITALIC}${ChatColor.YELLOW}Build $BUILD_NUMBER $BRANCH@${COMMIT_HASH.substring(7)}")
             }
-
-
         }
         return true
     }
@@ -304,7 +325,7 @@ class HomeEntity : JavaPlugin(), Listener {
     @EventHandler
     fun onPlayerQuit(e: PlayerQuitEvent) {
         e.quitMessage = "${ChatColor.GRAY}[${ChatColor.RED}-${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
-        botInstance.sendMessage("[-] ${e.player.name}")
+        botInstance.say("[-] ${e.player.name}")
     }
     
     @EventHandler
@@ -355,7 +376,6 @@ class HomeEntity : JavaPlugin(), Listener {
         e.player.sendMessage("${ChatColor.AQUA}  请发送'/r <密码> <密码>' 来注册  ")
         e.player.sendMessage("${ChatColor.RED}   <如果忘记密码请找管理员重置>  ")
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        e.player.sendMessage("${ChatColor.GRAY}P.S. '.'和'/'做前缀都可以")
         SessionHandler.limit(e.player)
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {
@@ -369,7 +389,7 @@ class HomeEntity : JavaPlugin(), Listener {
             }
         }, 30 * 20)
 
-        botInstance.sendMessage("[+] ${e.player.name}")
+        botInstance.say("[+] ${e.player.name}")
     }
 
     @EventHandler
@@ -396,7 +416,7 @@ class HomeEntity : JavaPlugin(), Listener {
         }
 
         if(!e.isCancelled && !RelayBotHandler.isDisabled(e.player.uniqueId)) {
-            botInstance.sendMessage("${e.player.name}: ${e.message}")
+            botInstance.say(e.player.name, e.message)
         }
     }
 

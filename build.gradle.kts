@@ -32,4 +32,11 @@ tasks {
             it?.file?.name == "spigot-1.16.5.jar" || it?.file?.name == "Yum.jar"
         }
     }
+
+    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+            freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
+        }
+    }
 }

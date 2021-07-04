@@ -7,18 +7,26 @@ import com.pengrad.telegrambot.UpdatesListener
 import com.pengrad.telegrambot.request.BaseRequest
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.response.BaseResponse
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.launch
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.command.CommandSender
 import java.io.IOException
 
-class RelayBot(private val groupId: Long, private val token: String) {
+@Deprecated("V1 Bot has Deprecated and will remove soon! Please use new Bot", ReplaceWith("cn.thelama.homeent.relay.TelegramBotV2"), DeprecationLevel.WARNING)
+class RelayBotV1(private val groupId: Long, private val token: String): Relay {
+    override val version = 1
     private val botInstance: TelegramBot = TelegramBot.Builder(token).okHttpClient(HomeEntity.instance.httpClient).build()
 
     init {
-        setUpdateListener()
+        MainScope().launch {
+            initBot()
+        }
     }
 
-    private fun setUpdateListener() {
+    override suspend fun initBot() {
         botInstance.setUpdatesListener({
             it.forEach { update ->
                 if(update.message() == null) {
@@ -58,9 +66,13 @@ class RelayBot(private val groupId: Long, private val token: String) {
         }
     }
 
-    fun sendMessage(str: String) {
+    override fun say(from: String, msg: String) {
+        say("$from: $msg")
+    }
+
+    override fun say(msg: String) {
         synchronized(botInstance) {
-            botInstance.execute(SendMessage(groupId, str), callback({ _, _ -> }, { _, err ->
+            botInstance.execute(SendMessage(groupId, msg), callback({ _, _ -> }, { _, err ->
                 Bukkit.getScheduler().runTask(HomeEntity.instance, Runnable {
                     if(err != null) {
                         Bukkit.getLogger().warning("Failed to send packet! ${err::class.java.name}: ${err.message}")
@@ -70,9 +82,10 @@ class RelayBot(private val groupId: Long, private val token: String) {
         }
     }
 
-    fun restartBot() {
-        TODO("未完成的重启功能")
-        //干掉正在运行的网络Client并重新初始化对象
+    override fun restartBot(operator: CommandSender?) {
+    }
+
+    override suspend fun shutdown() {
     }
 
     private fun <T : BaseRequest<T, R>, R : BaseResponse> callback(res: (BaseRequest<T, R>, BaseResponse) -> Unit, fail: (BaseRequest<*, *>, IOException?) -> Unit): Callback<T, R> {
