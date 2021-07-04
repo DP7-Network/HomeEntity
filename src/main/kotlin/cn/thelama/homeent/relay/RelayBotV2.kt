@@ -10,6 +10,7 @@ import dev.inmo.tgbotapi.extensions.behaviour_builder.buildBehaviour
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onCommand
 import dev.inmo.tgbotapi.extensions.behaviour_builder.triggers_handling.onContentMessage
 import dev.inmo.tgbotapi.extensions.utils.asFromUserMessage
+import dev.inmo.tgbotapi.extensions.utils.extensions.parseCommandsWithParams
 import dev.inmo.tgbotapi.types.ChatId
 import dev.inmo.tgbotapi.types.message.content.TextContent
 import dev.inmo.tgbotapi.utils.PreviewFeature
@@ -22,8 +23,12 @@ import org.bukkit.command.CommandSender
 class RelayBotV2(private val groupId: Long, private val token: String): Relay {
     override val version = 2
     private lateinit var bot: TelegramBot
-    private var task = GlobalScope.async {
-        initBot()
+    var scope = CoroutineScope(Dispatchers.IO)
+
+    init {
+        scope.launch {
+            initBot()
+        }
     }
 
     @OptIn(PreviewFeature::class, dev.inmo.tgbotapi.utils.RiskFeature::class)
@@ -34,18 +39,29 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
             }
         }
 
-        bot.buildBehaviour(GlobalScope) {
-            onCommand("list") { msg ->
+        bot.buildBehaviour(scope) {
+            onCommand("onlines") { msg ->
                 val onlines = Bukkit.getOnlinePlayers()
-                if(onlines.size == 1) {
-                    sendMessage(msg.chat, "目前有${onlines.size}个LSP在服务器中和自己击剑: \n ${onlines.joinToString(separator = " ") { it.name }}")
-                } else {
-                    sendMessage(msg.chat, "目前有${onlines.size}个LSP在服务器中击剑: \n ${onlines.joinToString(separator = " ") { it.name }}")
+                when(onlines.size) {
+                    0 -> {
+                        sendMessage(msg.chat, "目前没有LSP在服务器中, 大家都在群里击剑")
+                    }
+
+                    1 -> {
+                        sendMessage(msg.chat, "目前有${onlines.size}个LSP在服务器中和自己击剑: \n ${onlines.joinToString(separator = " ") { it.name }}")
+                    }
+
+                    else -> {
+                        sendMessage(msg.chat, "目前有${onlines.size}个LSP在服务器中击剑: \n ${onlines.joinToString(separator = " ") { it.name }}")
+
+                    }
                 }
             }
 
-            onCommand("debug") {
-                reply(it, it.content.text)
+            onCommand("debug", requireOnlyCommandInMessage = false) {
+                for((k, v) in it.parseCommandsWithParams()) {
+                    reply(it, "$k - $v")
+                }
             }
 
             onContentMessage {
@@ -59,7 +75,13 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
                                 "${usr.firstName} ${usr.lastName}"
                             }
                             Bukkit.broadcastMessage("${ChatColor.AQUA}[${ChatColor.GREEN}RELAY${ChatColor.AQUA}] ${ChatColor.YELLOW}$name${ChatColor.RESET}: ${content.text}")
+                        } else {
+                            println("Ignored non-target chat message from: ${it.chat.id.chatId}")
                         }
+                    }
+
+                    else -> {
+                        println("Ignored ${it.content::class.simpleName} type of chat message from: ${it.chat.id.chatId}")
                     }
                 }
             }
@@ -68,8 +90,9 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
 
     override fun restartBot(operator: CommandSender?) {
         GlobalScope.launch {
-            task.cancelAndJoin()
-            task = GlobalScope.async {
+            scope.cancel()
+            scope = CoroutineScope(Dispatchers.IO)
+            scope.launch {
                 initBot()
             }
 
@@ -82,7 +105,7 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
     }
 
     override suspend fun shutdown() {
-        task.cancelAndJoin()
+        scope.cancel()
     }
 
     override fun say(from: String, msg: String) {
@@ -90,7 +113,7 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
     }
 
     override fun say(msg: String) {
-        GlobalScope.launch {
+        scope.launch {
             bot.sendTextMessage(ChatId(groupId), msg)
         }
     }
