@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    val tgBotApiVersion = "0.35.0"
+    val tgBotApiVersion = "0.35.1"
     val serverJarPath = files("./dependency/spigot-1.17.jar")
 
     implementation(kotlin("stdlib"))

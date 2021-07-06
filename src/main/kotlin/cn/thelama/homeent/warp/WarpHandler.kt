@@ -1,6 +1,7 @@
 package cn.thelama.homeent.warp
 
 import cn.thelama.homeent.HomeEntity
+import cn.thelama.homeent.module.ModuledPlayerDataManager
 import org.bukkit.ChatColor
 import org.bukkit.Effect
 import org.bukkit.Sound
@@ -10,7 +11,10 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import kotlin.math.floor
 
+@Deprecated("Please use WarpHandlerV2 instead of this old dumb stuff", ReplaceWith("WarpHandlerV2"), DeprecationLevel.WARNING)
 object WarpHandler : CommandExecutor {
+    override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean = true
+    /*
     private val ops = listOf("add", "del", "list", "lookup", "save")
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(command.name == "warp") {
@@ -133,4 +137,5 @@ object WarpHandler : CommandExecutor {
         }
         return true
     }
+     */
 }

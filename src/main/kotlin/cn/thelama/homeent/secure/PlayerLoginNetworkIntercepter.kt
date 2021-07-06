@@ -1,4 +1,4 @@
-package cn.thelama.homeent.session
+package cn.thelama.homeent.secure
 
 import cn.thelama.homeent.HomeEntity
 import io.netty.channel.ChannelDuplexHandler
@@ -12,13 +12,13 @@ import net.minecraft.network.protocol.game.PacketPlayOutKeepAlive
 import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 
-class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
+class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDuplexHandler() {
     private val packets = mutableListOf<Packet<*>>()
 
     override fun channelRead(ctx: ChannelHandlerContext?, obj: Any?) {
         if(obj is PacketPlayInChat) {
-            if(HomeEntity.instance.isLogin(player)) {
-                SessionHandler.removeLimit(player)
+            if(SecureHandler.getLoginState(player.uniqueId)) {
+                SecureHandler.removeLimit(player)
                 super.channelRead(ctx, obj)
             }
             val str = obj.b()
@@ -29,30 +29,26 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
                         player.sendMessage("${ChatColor.RED}密码长度必须为4到21位")
                     }
                     when(sl[0].toLowerCase()) {
-                        ".l", ".i", ".login", "/.l", "/.i", "/.login", "/l", "/i", "/login" -> {
-                            if(HomeEntity.instance.checkCredentials(player, sl[1])) {
+                        ".l", ".i", ".login" -> {
+                            if(SecureHandler.checkCredentials(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
-                                synchronized(HomeEntity.instance.unloggedInPlayers) {
-                                    HomeEntity.instance.unloggedInPlayers.remove(player.uniqueId)
-                                }
+                                SecureHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
-                                SessionHandler.removeLimit(player)
+                                SecureHandler.removeLimit(player)
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
                             }
                             return
                         }
 
-                        ".r", ".reg", ".register", "/.r", "/.reg", "/.register", "/r", "/reg", "/register" -> {
-                            if(HomeEntity.instance.register(player, sl[1])) {
+                        ".r", ".reg", ".register" -> {
+                            if(SecureHandler.register(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到.DP7 996 Days")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
-                                synchronized(HomeEntity.instance.unloggedInPlayers) {
-                                    HomeEntity.instance.unloggedInPlayers.remove(player.uniqueId)
-                                }
+                                SecureHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
-                                SessionHandler.removeLimit(player)
+                                SecureHandler.removeLimit(player)
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
                             }
@@ -61,8 +57,8 @@ class NettyHandler(private val player: CraftPlayer) : ChannelDuplexHandler() {
                     }
                 } else {
                     player.sendMessage("${ChatColor.RED}参数不正确")
-                    player.sendMessage("${ChatColor.GREEN}正确的登录方法：'/l <密码>'")
-                    player.sendMessage("${ChatColor.GREEN}正确使用方法：'/r <密码>'")
+                    player.sendMessage("${ChatColor.GREEN}正确的登录方法：'.l <密码>'")
+                    player.sendMessage("${ChatColor.GREEN}正确使用方法：'.r <密码>'")
                 }
             }
             player.sendMessage("${ChatColor.RED}请先登录!")

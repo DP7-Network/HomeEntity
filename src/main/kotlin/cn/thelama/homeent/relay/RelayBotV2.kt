@@ -39,7 +39,10 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
             }
         }
 
-        bot.buildBehaviour(scope) {
+        bot.buildBehaviour(scope, defaultExceptionsHandler = {
+            it.printStackTrace()
+            println("Relay V2 Got a exception! Please check it above then report to developers.")
+        }) {
             onCommand("onlines") { msg ->
                 val onlines = Bukkit.getOnlinePlayers()
                 when(onlines.size) {

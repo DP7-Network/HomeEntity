@@ -1,6 +1,7 @@
 package cn.thelama.homeent.relay
 
 import cn.thelama.homeent.HomeEntity
+import cn.thelama.homeent.secure.SecureHandler
 import kotlinx.coroutines.isActive
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
@@ -17,7 +18,7 @@ object RelayBotHandler : CommandExecutor {
             if (args.isNotEmpty()) {
                 when (args[0]) {
                     "restart" -> {
-                        if (!(sender is Player && sender.uniqueId in HomeEntity.instance.maintainers) || sender !is ConsoleCommandSender) {
+                        if (!(sender is Player && SecureHandler.maintainer(sender.uniqueId)) || sender !is ConsoleCommandSender) {
                             return true
                         }
 

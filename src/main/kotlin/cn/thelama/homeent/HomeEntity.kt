@@ -3,30 +3,31 @@ package cn.thelama.homeent
 
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
+import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
 import cn.thelama.homeent.relay.Relay
 import cn.thelama.homeent.relay.RelayBotV1
 import cn.thelama.homeent.relay.RelayBotHandler
 import cn.thelama.homeent.relay.RelayBotV2
-import cn.thelama.homeent.session.SessionHandler
+import cn.thelama.homeent.secure.SecureHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
 import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.tpa.*
-import cn.thelama.homeent.warp.LocationWrapper
 import cn.thelama.homeent.warp.WarpCompleter
-import cn.thelama.homeent.warp.WarpHandler
+import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
 import com.google.gson.JsonElement
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import net.md_5.bungee.api.chat.BaseComponent
+import net.md_5.bungee.api.chat.ClickEvent
+import net.md_5.bungee.api.chat.ComponentBuilder
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import okhttp3.internal.wait
 import org.bukkit.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -42,9 +43,7 @@ import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
 import sun.misc.Unsafe
 import java.io.File
-import java.io.FileReader
 import java.io.FileWriter
-import java.io.InputStreamReader
 import java.lang.reflect.Field
 import java.net.InetSocketAddress
 import java.net.Proxy
@@ -56,7 +55,7 @@ import pw.yumc.Yum.api.YumAPI
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.5 Pre-Stable"
+        const val VERSION = "1.6 Pre-Release"
         const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
@@ -64,19 +63,13 @@ class HomeEntity : JavaPlugin(), Listener {
         var BUILD_NUMBER: Int = 0
     }
     private val gson = Gson()
-    val unloggedInPlayers = mutableListOf<UUID>()
-    lateinit var warps: HashMap<String, LocationWrapper>
+
     lateinit var botInstance: Relay
-    lateinit var passwords: HashMap<UUID, String>
-    lateinit var maintainers: ArrayList<UUID>
     lateinit var minecraftTranslation: HashMap<String, String>
     lateinit var globalNetworkProxy: Proxy
     lateinit var httpClient: OkHttpClient
     val lastTeleport: HashMap<UUID, Location> = HashMap()
-
-    private lateinit var warpsFile: File
-    private lateinit var maintainersFile: File
-    private lateinit var passwordsFile: File
+    val commandHelp: Array<BaseComponent> = ComponentBuilder("${ChatColor.GOLD}${ChatColor.UNDERLINE}指令参数不正确! 点这条消息获取帮助").event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity")).create()
 
     override fun onEnable() {
         instance = this
@@ -108,83 +101,17 @@ class HomeEntity : JavaPlugin(), Listener {
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
             }
-            logger.info("  Loading warps")
-            measureTimeMillis {
-                warpsFile = File(dataFolder, "warps.json")
-                if (!warpsFile.exists()) {
-                    warpsFile.createNewFile()
-                }
-                logger.info("    Parsing file...")
-                gson.fromJson<HashMap<String, LocationWrapper>?>(FileReader(warpsFile), object : TypeToken<HashMap<String, LocationWrapper>>() {}.type).also {
-                    warps = it ?: HashMap()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}Warps loaded in $it ms")
-            }
 
-            logger.info("  Loading main configuration")
             measureTimeMillis {
-                saveDefaultConfig()
-                if(this.config.getBoolean("proxy.enable")) {
-                    if(config.getString("proxy.type")!!.toLowerCase() == "socks") {
-                        this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
-                    } else if(config.getString("proxy.type")!!.toLowerCase() == "http") {
-                        this.globalNetworkProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
-                    } else {
-                        logger.info("    ${ChatColor.RED}无法确认你的代理类型是什么 :(")
-                        this.globalNetworkProxy = Proxy.NO_PROXY
-                    }
-                } else {
-                    this.globalNetworkProxy = Proxy.NO_PROXY
-                }
-
-                httpClient = OkHttpClient.Builder().proxy(globalNetworkProxy).build()
+                ModuledPlayerDataManager.init(dataFolder)
             }.also {
-                logger.info("    ${ChatColor.GREEN}main loaded in $it ms")
-            }
-
-            logger.info("  Loading passwords")
-            measureTimeMillis {
-                passwordsFile = File(dataFolder, "passwords.json")
-                if (!passwordsFile.exists()) {
-                    passwordsFile.createNewFile()
-                }
-                logger.info("    Parsing file...")
-                gson.fromJson<HashMap<UUID, String>>(FileReader(passwordsFile), object : TypeToken<HashMap<UUID, String>>() {}.type).also {
-                    passwords = it ?: HashMap()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}Passwords loaded in $it ms")
-            }
-
-            logger.info("  Loading translations")
-            measureTimeMillis {
-                logger.info("    Parsing file...")
-                gson.fromJson<HashMap<String, String>>(InputStreamReader(this.javaClass.classLoader.getResourceAsStream("zh-cn.lang")!!), object : TypeToken<HashMap<String, String>>() {}.type).also {
-                    minecraftTranslation = it ?: HashMap()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}Translations loaded in $it ms")
-            }
-
-            logger.info("  Loading Maintainers")
-            measureTimeMillis {
-                maintainersFile = File(dataFolder, "maintainers.json")
-                if(!maintainersFile.exists()) {
-                    maintainersFile.createNewFile()
-                }
-                logger.info("    Parsing file...")
-                gson.fromJson<ArrayList<UUID>>(FileReader(maintainersFile), object: TypeToken<ArrayList<UUID>>() {}.type).also {
-                    maintainers = it ?: ArrayList()
-                }
-            }.also {
-                logger.info("    ${ChatColor.GREEN}Maintainers loaded in $it ms")
+                println("Player data loaded in ${it}ms")
             }
 
             logger.info("  Register commands...")
 
             this.getCommand("warp")!!.apply {
-                setExecutor(WarpHandler)
+                setExecutor(WarpHandlerV2)
                 tabCompleter = WarpCompleter
                 logger.info("    ${ChatColor.GREEN}Command warp registered successfully")
             }
@@ -201,7 +128,7 @@ class HomeEntity : JavaPlugin(), Listener {
             }
 
             this.getCommand("session")!!.apply {
-                setExecutor(SessionHandler)
+                setExecutor(SecureHandler)
                 logger.info("    ${ChatColor.GREEN}Command session registered successfully")
             }
 
@@ -237,6 +164,12 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Command tpdeny registered successfully")
             }
 
+            this.getCommand("relay")!!.apply {
+                setExecutor(RelayBotHandler)
+                logger.info("    ${ChatColor.GREEN}Command relay registered successfully")
+
+            }
+
 
             logger.info("  Register events...")
 
@@ -269,15 +202,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onDisable() {
-        logger.info("Shutting down HomeEntity...")
-        logger.info("  Save data...")
-        logger.info("    Saving warps")
-        writeFile(warpsFile, gson.toJson(warps))
-        logger.info("    Saving passwords")
-        writeFile(passwordsFile, gson.toJson(passwords))
-        logger.info("    Saving maintainers")
-        writeFile(maintainersFile, gson.toJson(maintainers))
-        logger.info("Shutting down relay bot...")
+        WarpHandlerV2.save()
         GlobalScope.launch {
             botInstance.shutdown()
         }
@@ -366,9 +291,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @EventHandler
     fun onPlayerJoin(e: PlayerJoinEvent) {
-        synchronized(unloggedInPlayers) {
-            unloggedInPlayers.add(e.player.uniqueId)
-        }
+        SecureHandler.setLoginState(e.player.uniqueId, false)
         e.joinMessage = "${ChatColor.GRAY}[${ChatColor.GREEN}+${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         e.player.sendMessage("${ChatColor.GRAY}============================")
         e.player.sendMessage("${ChatColor.GOLD}      欢迎来到${config.getString("main.serverName")}      ")
@@ -376,16 +299,14 @@ class HomeEntity : JavaPlugin(), Listener {
         e.player.sendMessage("${ChatColor.AQUA}  请发送'/r <密码> <密码>' 来注册  ")
         e.player.sendMessage("${ChatColor.RED}   <如果忘记密码请找管理员重置>  ")
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        SessionHandler.limit(e.player)
+        SecureHandler.limit(e.player)
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {
-            synchronized(unloggedInPlayers) {
-                if(unloggedInPlayers.contains(e.player.uniqueId)) {
-                    unloggedInPlayers.remove(e.player.uniqueId)
-                    e.player.kickPlayer("${ChatColor.RED} 给你的登陆时间没有那么多，按快点OK?")
-                } else {
-                    SessionHandler.removeLimit(e.player)
-                }
+            if(SecureHandler.getLoginState(e.player.uniqueId)) {
+                SecureHandler.removeLimit(e.player)
+            } else {
+                SecureHandler.setLoginState(e.player.uniqueId, false)
+                e.player.kickPlayer("${ChatColor.RED} 给你的登陆时间没有那么多，按快点OK?")
             }
         }, 30 * 20)
 
@@ -394,7 +315,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageByEntityEvent) {
-        if(e.entity is Player && unloggedInPlayers.contains(e.entity.uniqueId)) {
+        if(e.entity is Player && SecureHandler.getLoginState(e.entity.uniqueId)) {
             e.isCancelled = true
         }
     }
@@ -420,28 +341,8 @@ class HomeEntity : JavaPlugin(), Listener {
         }
     }
 
-    fun isLogin(p: Player): Boolean {
-        return p.uniqueId !in unloggedInPlayers
-    }
-
     fun sha256(str: String): String {
         return String(Hex.encodeHex(MessageDigest.getInstance("SHA-256").digest(str.toByteArray(charset("UTF-8"))), false))
-    }
-
-    fun checkCredentials(p: Player, str: String): Boolean {
-        if(passwords.containsKey(p.uniqueId)) {
-            return passwords[p.uniqueId] == sha256(str)
-        }
-        return false
-    }
-
-    fun register(p: Player, str: String): Boolean {
-        return if(!passwords.containsKey(p.uniqueId)) {
-            passwords[p.uniqueId] = sha256(str)
-            true
-        } else {
-            false
-        }
     }
 
     private fun launchCheckUpdatesTask() {
