@@ -29,7 +29,7 @@ object ModuledPlayerDataManager {
         dataBaseFolder.listFiles()?.forEach {
             runCatching {
                 if(it.extension == "json") {
-                    val uuid = UUID.fromString(it.name)
+                    val uuid = UUID.fromString(it.nameWithoutExtension)
                     val rootObject = gson.fromJson<JsonObject>(FileReader(it), object: TypeToken<JsonObject>() {}.type)
                     val root = hashMapOf<String, JsonObject>()
                     rootObject.entrySet().forEach {
@@ -39,7 +39,8 @@ object ModuledPlayerDataManager {
                     }
                     playerRoot[uuid] = root
                 }
-            }.onFailure { _ ->
+            }.onFailure { t ->
+                t.printStackTrace()
                 val nf = File(dataBaseFolder, "${it.name}.error")
                 if(nf.exists()) {
                     it.renameTo(File("${nf.name}.error"))
@@ -106,6 +107,8 @@ object ModuledPlayerDataManager {
             file.createNewFile()
             val fw = FileWriter(file, false)
             fw.write(gson.toJson(root))
+            fw.flush()
+            fw.close()
         }
     }
 }

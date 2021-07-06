@@ -71,6 +71,14 @@ object RelayBotHandler : CommandExecutor {
                         }
                     }
 
+                    "say" -> {
+                        if(sender is ConsoleCommandSender || (sender is Player && SecureHandler.maintainer(sender.uniqueId))) {
+                            if(args.size > 1) {
+                                HomeEntity.instance.botInstance.say(args.slice(2..args.size).joinToString(separator = " ") { it })
+                            }
+                        }
+                    }
+
                     else -> {
                         sender.sendMessage("${ChatColor.RED} 无此子指令")
                     }

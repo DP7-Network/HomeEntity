@@ -108,6 +108,18 @@ class HomeEntity : JavaPlugin(), Listener {
                 println("Player data loaded in ${it}ms")
             }
 
+            if(config.getBoolean("proxy.enable")) {
+                if(config.getString("proxy.type")?.toLowerCase() == "http") {
+                    this.globalNetworkProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                } else if (config.getString("proxy.type")?.toLowerCase() == "socks") {
+                    this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                } else {
+                    this.globalNetworkProxy = Proxy.NO_PROXY
+                }
+            } else {
+                this.globalNetworkProxy = Proxy.NO_PROXY
+            }
+
             logger.info("  Register commands...")
 
             this.getCommand("warp")!!.apply {
@@ -203,6 +215,9 @@ class HomeEntity : JavaPlugin(), Listener {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onDisable() {
         WarpHandlerV2.save()
+        SecureHandler.save()
+
+        ModuledPlayerDataManager.save(this.dataFolder)
         GlobalScope.launch {
             botInstance.shutdown()
         }
@@ -374,7 +389,7 @@ class HomeEntity : JavaPlugin(), Listener {
             if(jsonTree["number"].asInt > BUILD_NUMBER || sync) {
                 Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
                 FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$stream/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
-                    Proxy(Proxy.Type.SOCKS, InetSocketAddress("192.168.1.102", 1089))).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
+                    this.globalNetworkProxy).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
                 Bukkit.broadcastMessage("更新已下载完毕！准备重载")
                 YumAPI.reload(this)
             }
