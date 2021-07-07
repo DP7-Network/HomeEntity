@@ -69,7 +69,11 @@ class HomeEntity : JavaPlugin(), Listener {
     lateinit var globalNetworkProxy: Proxy
     lateinit var httpClient: OkHttpClient
     val lastTeleport: HashMap<UUID, Location> = HashMap()
-    val commandHelp: Array<BaseComponent> = ComponentBuilder("${ChatColor.GOLD}${ChatColor.UNDERLINE}指令参数不正确! 点这条消息获取帮助").event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity")).create()
+    val commandHelp: Array<BaseComponent> = ComponentBuilder("${ChatColor.GOLD}指令参数错误! ")
+        .append(ComponentBuilder(
+        "${ChatColor.GOLD}» ${ChatColor.UNDERLINE}点击这里获取帮助${ChatColor.RESET}${ChatColor.GOLD} «")
+        .event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity"))
+        .create()).create()
 
     override fun onEnable() {
         instance = this
@@ -110,9 +114,11 @@ class HomeEntity : JavaPlugin(), Listener {
 
             if(config.getBoolean("proxy.enable")) {
                 if(config.getString("proxy.type")?.toLowerCase() == "http") {
-                    this.globalNetworkProxy = Proxy(Proxy.Type.HTTP, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    this.globalNetworkProxy = Proxy(Proxy.Type.HTTP,
+                        InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
                 } else if (config.getString("proxy.type")?.toLowerCase() == "socks") {
-                    this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS, InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
+                    this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS,
+                        InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
                 } else {
                     this.globalNetworkProxy = Proxy.NO_PROXY
                 }
@@ -192,7 +198,8 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("  Finalizing...")
 
             server.onlinePlayers.forEach {
-                it.setDisplayName("${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
+                it.setDisplayName(
+                    "${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
             }
             //launchCheckUpdatesTask()
             logger.info("${ChatColor.RED}因为lama穷导致CI没钱续费 :( 自动更新无了")
@@ -256,7 +263,11 @@ class HomeEntity : JavaPlugin(), Listener {
                     }
                 }
             } else {
-                sender.sendMessage("${ChatColor.AQUA}HomeEntity ${ChatColor.RESET}- ${ChatColor.GREEN}$VERSION ${ChatColor.RESET}| ${ChatColor.ITALIC}${ChatColor.YELLOW}Build $BUILD_NUMBER $BRANCH@${COMMIT_HASH.substring(7)}")
+                sender.sendMessage("${ChatColor.AQUA}HomeEntity " +
+                        "${ChatColor.RESET}- ${ChatColor.GREEN}$VERSION " +
+                        "${ChatColor.RESET}| ${ChatColor.ITALIC}" +
+                        "${ChatColor.YELLOW}Build $BUILD_NUMBER " +
+                        "$BRANCH@${COMMIT_HASH.substring(7)}")
             }
         }
         return true
@@ -264,14 +275,16 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @EventHandler
     fun onPlayerQuit(e: PlayerQuitEvent) {
-        e.quitMessage = "${ChatColor.GRAY}[${ChatColor.RED}-${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
+        e.quitMessage =
+            "${ChatColor.GRAY}[${ChatColor.RED}-${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         botInstance.say("[-] ${e.player.name}")
     }
     
     @EventHandler
     fun onPlayerTeleport(e: PlayerTeleportEvent) {
         if(e.from.world != e.to?.world) {
-            e.player.setDisplayName("${ChatColor.AQUA}[${parseWorld(e.to?.world?.name)}${ChatColor.AQUA}] ${e.player.name}")
+            e.player.setDisplayName(
+                "${ChatColor.AQUA}[${parseWorld(e.to?.world?.name)}${ChatColor.AQUA}] ${e.player.name}")
         }
         lastTeleport[e.player.uniqueId] = e.from
     }
@@ -291,7 +304,7 @@ class HomeEntity : JavaPlugin(), Listener {
             }
 
             "world_nether" -> {
-                "${ChatColor.DARK_RED}地狱"
+                "${ChatColor.DARK_RED}下界"
             }
 
             "world_the_end" -> {
@@ -299,7 +312,7 @@ class HomeEntity : JavaPlugin(), Listener {
             }
 
             else -> {
-                "${ChatColor.DARK_BLUE}$name"
+                "${ChatColor.BLUE}$name"
             }
         }
     }
@@ -309,10 +322,10 @@ class HomeEntity : JavaPlugin(), Listener {
         SecureHandler.setLoginState(e.player.uniqueId, false)
         e.joinMessage = "${ChatColor.GRAY}[${ChatColor.GREEN}+${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        e.player.sendMessage("${ChatColor.GOLD}      欢迎来到${config.getString("main.serverName")}      ")
-        e.player.sendMessage("${ChatColor.AQUA}  请发送'/l <密码>'       来登录  ")
-        e.player.sendMessage("${ChatColor.AQUA}  请发送'/r <密码> <密码>' 来注册  ")
-        e.player.sendMessage("${ChatColor.RED}   <如果忘记密码请找管理员重置>  ")
+        e.player.sendMessage("${ChatColor.GOLD}  欢迎来到${config.getString("main.serverName")}      ")
+        e.player.sendMessage("${ChatColor.AQUA}  请发送'.l <密码>'       来登录")
+        e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册")
+        e.player.sendMessage("${ChatColor.RED}  <如果忘记密码请找管理员重置>")
         e.player.sendMessage("${ChatColor.GRAY}============================")
         SecureHandler.limit(e.player)
 
@@ -337,18 +350,15 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @EventHandler
     fun onChat(e: AsyncPlayerChatEvent) {
-        when(e.player.name) {
-            "Lama3L9R" -> {
-                e.format = "${ChatColor.AQUA}[${ChatColor.RESET}${parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] ${ChatColor.BLUE}Dev ${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: ${ChatColor.RESET}%2\$s"
-            }
-
-            else -> {
-                e.format = "${ChatColor.AQUA}[${ChatColor.RESET}${parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] ${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: ${ChatColor.RESET}%2\$s"
-            }
-        }
+        e.format =
+            "${ChatColor.AQUA}[${ChatColor.RESET}${parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] " +
+                    "${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: " +
+                    "${ChatColor.RESET}%2\$s"
 
         Notice.parseMessage(e.message).forEach {
-            it.sendTitle("${ChatColor.YELLOW}有人提到你", "${ChatColor.YELLOW}${e.player.name}${ChatColor.WHITE} 在聊天消息中提到了你，快去看看", 10, 3 * 20, 10)
+            it.sendTitle("${ChatColor.YELLOW}有人提到你",
+                "${ChatColor.YELLOW}${e.player.name}${ChatColor.WHITE} 在聊天消息中提到了你，快去看看",
+                10, 3 * 20, 10)
         }
 
         if(!e.isCancelled && !RelayBotHandler.isDisabled(e.player.uniqueId)) {
@@ -357,7 +367,8 @@ class HomeEntity : JavaPlugin(), Listener {
     }
 
     fun sha256(str: String): String {
-        return String(Hex.encodeHex(MessageDigest.getInstance("SHA-256").digest(str.toByteArray(charset("UTF-8"))), false))
+        return String(Hex.encodeHex(MessageDigest.getInstance("SHA-256")
+            .digest(str.toByteArray(charset("UTF-8"))), false))
     }
 
     private fun launchCheckUpdatesTask() {
@@ -388,7 +399,10 @@ class HomeEntity : JavaPlugin(), Listener {
             val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
             if(jsonTree["number"].asInt > BUILD_NUMBER || sync) {
                 Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
-                FileUtils.copyToFile(URL("http://s1.lama3l9r.net/job/$stream/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar").openConnection(
+                FileUtils.copyToFile(
+                    URL("http://s1.lama3l9r.net/job/$stream" +
+                            "/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar")
+                    .openConnection(
                     this.globalNetworkProxy).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
                 Bukkit.broadcastMessage("更新已下载完毕！准备重载")
                 YumAPI.reload(this)

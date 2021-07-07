@@ -4,12 +4,15 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
+import net.md_5.bungee.api.chat.ComponentBuilder
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.util.*
+import kotlin.NumberFormatException
+import kotlin.math.ceil
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
     private val warps: MutableMap<UUID, MutableMap<String, LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
@@ -17,13 +20,16 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
-            sender.sendMessage("${ChatColor.RED}只有玩家才可以执行本指令")
+            sender.sendMessage("${ChatColor.RED}抱歉, 该指令专属于玩家")
             return true
         }
 
         if(args.isEmpty()) {
             sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             return true
+        }
+        if(sender.uniqueId !in warps) {
+            warps[sender.uniqueId] = hashMapOf()
         }
 
         when(args[0]) {
@@ -38,47 +44,94 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 return true
                             }
                             if(args.size > 5) {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid, args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), args[5])
+                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                    args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), args[5])
 
                             } else {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid, args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
+                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                    args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
                             }
-                            sender.sendMessage("${ChatColor.GREEN}成功创建了地标: '${ChatColor.GOLD}${args[1]}${ChatColor.RESET}'")
+                            sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RESET}")
                         }.onFailure {
-                            sender.sendMessage("${ChatColor.RED}无法将您输入得参数转换为Double型数字")
+                            if (it is NumberFormatException) {
+                                val message = it.message!!
+                                val err = message.substring(19, message.length - 2)
+                                sender.sendMessage("${ChatColor.YELLOW}$err${ChatColor.RED} 不是一个有效数字")
+                            } else throw it;
                         }
                     }
                     else -> {
                         if(!checkName(args[1], sender)) {
                             return true
                         }
-                        if(sender.uniqueId !in warps) {
-                            warps[sender.uniqueId] = hashMapOf()
-                        }
 
                         if(args.size > 2) {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid, sender.location.x, sender.location.y, sender.location.z), args[2])
+                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                sender.location.x, sender.location.y, sender.location.z), args[2])
 
                         } else {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid, sender.location.x, sender.location.y, sender.location.z), "")
+                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                sender.location.x, sender.location.y, sender.location.z), "")
                         }
-                        sender.sendMessage("${ChatColor.GREEN}成功创建了地标: '${ChatColor.GOLD}${args[1]}${ChatColor.RESET}'")
+                        sender.sendMessage("已创建地标: '${ChatColor.GOLD}${args[1]}'")
                     }
                 }
             }
             "rm" -> {
                 if(args.size > 1) {
-                    if(sender.uniqueId !in warps) {
-                        warps[sender.uniqueId] = hashMapOf()
-                    }
                     warps[sender.uniqueId]!!.remove(args[1])
                 } else {
                     sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
                 }
             }
             "list" -> {
-                // <记录点> [分享] [删除] [修改到当前位置]
-                //当前页 <Page> 共 <Page> [下一页(可能没有)] [上一页(可能没有)]
+                val num = 7f //每页显示数量 (一定加f)
+
+                val tmpWarps = warps[sender.uniqueId]!!
+                if (tmpWarps.isEmpty()) {
+                    sender.sendMessage("${ChatColor.GOLD}没有可显示的地标")
+                    return true
+                }
+
+                val allPagesNumber = ceil(tmpWarps.size / num) //-> The number of all pages.
+
+                fun showList(currentPage: Int) {
+                    // 这是第 n 页, 共 s 页 [上一页(pn)] [下一页(nn)]
+                    // name: x y z | [分享] [删除] [设为当前位置]
+                    // 使用 /warp list [页数] 来查看相应页数
+                    sender.spigot().sendMessage(*ComponentBuilder(
+                                "${ChatColor.GOLD}这是第 ${ChatColor.YELLOW}$currentPage${ChatColor.GOLD} 页, " +
+                                "共 ${ChatColor.YELLOW}$allPagesNumber${ChatColor.GOLD} 页 ")
+                        .append(ComponentBuilder(
+                            "${ChatColor.GOLD}[${ChatColor.YELLOW}${ChatColor.UNDERLINE}上一页"
+                        ).create()).create())
+
+                }
+
+                if (args.size > 1) {
+                    val currentPage: Int //-> Current page number to list.
+                    try {
+                        currentPage = args[1].toInt()
+                    } catch (_: NumberFormatException) {
+                        sender.sendMessage("${ChatColor.YELLOW}${args[1]}${ChatColor.RED} 不是一个有效数字")
+                        return true
+                    }
+                    //Send an error if specified page is out of the number of all pages.
+                    if (currentPage > allPagesNumber) {
+                        sender.sendMessage("${ChatColor.RED}页数 ${ChatColor.YELLOW}${args[1]}${ChatColor.RED} 过大")
+                        return true
+                    }
+                    showList(currentPage)
+                }
+                else showList(1);
+            }
+            "lookup" -> {
+            }
+            "desc" -> {
+            }
+            "share" -> {
+            }
+            "find" -> {
             }
         }
         return true
@@ -86,7 +139,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
 
     private fun checkName(name: String, sender: CommandSender): Boolean {
         if(name in ops) {
-            sender.sendMessage("${ChatColor.RED}'$name'不可以做为地标的名称! ${ops.joinToString(" ") { "'$it'" }} 都不可以做为地标的名称!")
+            sender.sendMessage("${ChatColor.RED}'$name'不可以做为地标的名称, 更多内容请查看帮助")
             return false
         }
         return true

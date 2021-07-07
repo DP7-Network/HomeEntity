@@ -1,13 +1,13 @@
 package cn.thelama.homeent.warp
 
+import org.bukkit.command.Command
+import org.bukkit.command.CommandExecutor
+import org.bukkit.command.CommandSender
 import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import org.bukkit.ChatColor
 import org.bukkit.Effect
 import org.bukkit.Sound
-import org.bukkit.command.Command
-import org.bukkit.command.CommandExecutor
-import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import kotlin.math.floor
 
@@ -62,7 +62,7 @@ object WarpHandler : CommandExecutor {
                         "list" -> {
                             var warps: HashMap<String, LocationWrapper> = HomeEntity.instance.warps
                             if (args.size > 1 && args[1].isNotEmpty()) {
-                                //筛选关键词 TODO 多关键词支持
+                                //筛选关键词
                                 val keyWord = args[1]
                                 val tmp: HashMap<String, LocationWrapper> = HashMap()
                                 warps.forEach { (name, loc) ->
