@@ -4,7 +4,11 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
+import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
+import net.md_5.bungee.api.chat.HoverEvent
+import net.md_5.bungee.api.chat.TextComponent
+import net.md_5.bungee.api.chat.hover.content.Content
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -51,7 +55,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
                                     args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
                             }
-                            sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RESET}")
+                            sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                         }.onFailure {
                             if (it is NumberFormatException) {
                                 val message = it.message!!
@@ -73,7 +77,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                             warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
                                 sender.location.x, sender.location.y, sender.location.z), "")
                         }
-                        sender.sendMessage("已创建地标: '${ChatColor.GOLD}${args[1]}'")
+                        sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                     }
                 }
             }
@@ -93,19 +97,53 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     return true
                 }
 
-                val allPagesNumber = ceil(tmpWarps.size / num) //-> The number of all pages.
+                val allPagesNumber = ceil(tmpWarps.size / num).toInt() //-> The number of all pages.
 
                 fun showList(currentPage: Int) {
-                    // 这是第 n 页, 共 s 页 [上一页(pn)] [下一页(nn)]
                     // name: x y z | [分享] [删除] [设为当前位置]
+                    // 这是第 n 页, 共 s 页 [上一页(pn)] [下一页(nn)]
                     // 使用 /warp list [页数] 来查看相应页数
+
+                    /* 第一部分: 遍历地标并逐行显示 */
+                    val lastIndex = currentPage * 7 - 1
+                    val firstIndex = lastIndex - 6
+                    //TODO 已确认需要修改数据结构，MutableMap是无序的，可能每次遍历的顺序都不同
+
+                    /* 第二部分: 显示页数信息 */
+                    val pageButton1 =
+                        if (currentPage == 1)
+                            ComponentBuilder(
+                                "${ChatColor.GOLD}[${ChatColor.GRAY}已经是第一页了${ChatColor.GOLD}]").create()
+                        else {
+                            val previousPage = currentPage - 1
+                            ComponentBuilder(
+                                "${ChatColor.GOLD}[${ChatColor.YELLOW}${ChatColor.UNDERLINE}上一页($previousPage)${ChatColor.GOLD}]")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp list $previousPage")).create()
+                        }
+                    val pageButton2 =
+                        if (currentPage == allPagesNumber)
+                            ComponentBuilder(
+                                "${ChatColor.GOLD}[${ChatColor.GRAY}已经是最后一页了${ChatColor.GOLD}]").create()
+                        else {
+                            val nextPage = currentPage + 1
+                            ComponentBuilder(
+                                "${ChatColor.GOLD}[${ChatColor.YELLOW}${ChatColor.UNDERLINE}下一页($nextPage)${ChatColor.GOLD}]")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp list $nextPage")).create()
+                        }
+
                     sender.spigot().sendMessage(*ComponentBuilder(
                                 "${ChatColor.GOLD}这是第 ${ChatColor.YELLOW}$currentPage${ChatColor.GOLD} 页, " +
                                 "共 ${ChatColor.YELLOW}$allPagesNumber${ChatColor.GOLD} 页 ")
-                        .append(ComponentBuilder(
-                            "${ChatColor.GOLD}[${ChatColor.YELLOW}${ChatColor.UNDERLINE}上一页"
-                        ).create()).create())
+                        .append(pageButton1).append(" ").append(pageButton2).create())
 
+                    /* 第三部分: 显示命令提示 */
+                    val commandTip = ComponentBuilder("${ChatColor.GRAY}/warp list <页数>${ChatColor.RESET}")
+                        .event(TextComponent("点击输入").hoverEvent)
+                        .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp list "))
+                        .create()
+
+                    sender.spigot().sendMessage(
+                        *ComponentBuilder("使用 ").append(commandTip).append(" 来查看相应页数").create())
                 }
 
                 if (args.size > 1) {
