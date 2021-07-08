@@ -10,7 +10,7 @@ object WarpCompleter : TabCompleter {
     private val ops = WarpHandlerV2.ops
     override fun onTabComplete(sender: CommandSender, cmd: Command, lable: String, args: Array<out String>): List<String>? {
         if(cmd.name == "warp") {
-            if(args.isNotEmpty() && (args[0] == "share" || args[0] == "rm" || args[0] == "detail") && sender is Player) {
+            if(args.isNotEmpty() && (args[0] == "share" || args[0] == "rm" || args[0] == "detail" || args[0] == "set-des") && sender is Player) {
                 if(args.size > 1) {
                     (WarpHandlerV2.config(sender.uniqueId)?.keys?.stream()?.filter { it.startsWith(args[1]) }?.collect(Collectors.toList()) ?: mutableListOf()) + ops
                 }

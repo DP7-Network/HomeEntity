@@ -20,7 +20,7 @@ import kotlin.math.floor
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
     private val warps = getWarps()
-    val ops = listOf("set", "rm", "list", "detail", "desc", "share", "find")
+    val ops = listOf("set", "rm", "list", "detail", "set-des", "share", "find")
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
@@ -37,25 +37,38 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
         }
 
         when(args[0]) {
+            // warp set <name> [x y z] [force]
             "set" -> {
+                val tmpMap = warps[sender.uniqueId]!!
+
+                fun warn(command: String) {
+                    val confirmButton = ComponentBuilder(
+                        "${ChatColor.GOLD}${ChatColor.UNDERLINE}点击这里${ChatColor.RESET}")
+                        .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, command))
+                        .event(TextComponent("${ChatColor.RED}该操作不可逆").hoverEvent)
+                        .create()
+                    sender.sendMessage("${ChatColor.RED}地标名称 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 已存在, " +
+                            "若继续设置则将覆盖原有地标")
+                    sender.spigot().sendMessage(*ComponentBuilder(
+                        "${ChatColor.YELLOW}请在最后添加 ${ChatColor.GOLD}force${ChatColor.YELLOW} 参数或")
+                        .append(confirmButton).append("${ChatColor.YELLOW}确认").create())
+                }
+
                 when {
                     args.size < 2 -> {
                         sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
                     }
                     args.size > 4 -> {
                         runCatching {
-                            if(!checkName(args[1], sender)) {
+                            if (!checkName(args[1], sender)) {
                                 return true
                             }
-                            if(args.size > 5) {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
-                                    args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), args[5])
-
-                            } else {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
-                                    args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
+                            if (args.size > 5 && args[5] == "force" || !tmpMap.containsKey(args[1])) {
+                                tmpMap[args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
+                                        args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
+                                sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                             }
-                            sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
+                            else warn("/warp set ${args[1]} ${args[2]} ${args[3]} ${args[4]} force")
                         }.onFailure {
                             if (it is NumberFormatException) {
                                 val message = it.message!!
@@ -68,30 +81,31 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                         if(!checkName(args[1], sender)) {
                             return true
                         }
-
-                        if(args.size > 2) {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
-                                sender.location.x, sender.location.y, sender.location.z), args[2])
-
-                        } else {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
-                                sender.location.x, sender.location.y, sender.location.z), "")
+                        if (args.size > 3 && args[2] == "force" || !tmpMap.containsKey(args[1])) {
+                            tmpMap[args[1]] = LocationEntry(
+                                args[1], LocationWrapper(sender.world.uid,
+                                    sender.location.x, sender.location.y, sender.location.z), ""
+                            )
+                            sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                         }
-                        sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
+                        else warn("/warp set ${args[1]} force")
                     }
                 }
             }
+
+            // warp rm <name>
             "rm" -> {
                 if(args.size > 1) {
-                    if (args.size > 2 && args[2] == "force")
+                    if (args.size > 2 && args[2] == "force") {
                         warps[sender.uniqueId]!!.remove(args[1])
-                    else {
+                        sender.sendMessage("已删除地标 ${ChatColor.GOLD}${args[1]}")
+                    } else {
                         val confirmButton = ComponentBuilder(
                             "${ChatColor.GOLD}${ChatColor.UNDERLINE}点击这里${ChatColor.RESET}")
                             .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm ${args[1]} force"))
                             .event(TextComponent("${ChatColor.RED}该操作不可逆").hoverEvent)
                             .create()
-                        sender.sendMessage("${ChatColor.RED}确定要删除 ${ChatColor.GOLD}${args[1]}" +
+                        sender.sendMessage("${ChatColor.RED}确定要删除地标 ${ChatColor.GOLD}${args[1]}" +
                                 "${ChatColor.RED} 吗, 该地标将会永久失去! (真的很久!)")
                         sender.spigot().sendMessage(*ComponentBuilder(
                             "${ChatColor.YELLOW}请在最后添加 ${ChatColor.GOLD}force${ChatColor.YELLOW} 参数或")
@@ -101,8 +115,10 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
                 }
             }
+
+            // warp list [page]
             "list" -> {
-                val num = 7f //每页显示数量 (一定加f)
+                var num = 7f //每页显示数量 (一定加f)
 
                 val tmpWarps = warps[sender.uniqueId]!!
                 if (tmpWarps.isEmpty()) {
@@ -110,7 +126,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     return true
                 }
 
-                val allPagesNumber = ceil(tmpWarps.size / num).toInt() //-> The number of all pages.
+                var allPagesNumber = 1 //-> The number of all pages.
 
                 fun showList(currentPage: Int) {
                     // name: x y z | [分享] [删除] [设为当前位置]
@@ -118,12 +134,12 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     // 使用 /warp list [页数] 来查看相应页数
 
                     /* 第一部分: 遍历地标并逐行显示 */
-                    val lastIndex = currentPage * 7 - 1
-                    val firstIndex = lastIndex - 6
+                    val lastIndex = currentPage * num - 1
+                    val firstIndex = lastIndex - num + 1
                     //已确认需要修改数据结构，MutableMap是无序的, 可能每次遍历的顺序都不同(目前改为 `LinkedHashMap` ).
                     //同时原数据结构遍历时无法获取地标名称, 故无法直接根据点击的操作执行相应地标的指令, 因此在
-                    //LocationWrapper 中添加了 name:String 属性, 以方便直接获取地标名称;
-                    //但这样导致存储时数据多余(会存储两个 name 属性), 因此存储时改为直接存储一个 `List<LocationWrapper>` ,
+                    //LocationEntry 中添加了 name:String 属性, 以方便直接获取地标名称;
+                    //但这样导致存储时数据多余(会存储两个 name 属性), 因此存储时改为直接存储一个 `List<LocationEntry>` ,
                     //加载时将该列表重新处理为 LinkedHashMap 从而做到不影响其他功能.
                     //(这种数据结构相较于之前, 多了warp点数量的引用和玩家数量的 HashMap 对象, 其余不变,
                     //故几乎不会占用更多内存, 只是加载和保存时处理时间会增加.)
@@ -210,8 +226,14 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     val currentPage: Int //-> Current page number to list.
                     try {
                         currentPage = args[1].toInt()
+                        allPagesNumber = ceil(tmpWarps.size / num).toInt()
                     } catch (_: NumberFormatException) {
-                        sender.sendMessage("${ChatColor.YELLOW}${args[1]}${ChatColor.RED} 不是一个有效数字")
+                        if (args[1] == "all") {
+                            num = tmpWarps.size.toFloat()
+                            showList(1)
+                        } else {
+                            sender.sendMessage("${ChatColor.YELLOW}${args[1]}${ChatColor.RED} 不是一个有效数字")
+                        }
                         return true
                     }
                     //Send an error if specified page is out of the number of all pages.
@@ -223,6 +245,8 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 }
                 else showList(1)
             }
+
+            // warp detail <name>
             "detail" -> {
                 if (args.size > 1) {
                     val entry = warps[sender.uniqueId]!![args[1]]
@@ -271,8 +295,12 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 }
                 else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
-            "desc" -> {
+
+            // warp set-des <name> <description>
+            "set-des" -> {
             }
+
+            // warp share <name>
             "share" -> {
                 if (args.size > 1) {
                     val entry = warps[sender.uniqueId]!![args[1]]
@@ -311,6 +339,8 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 }
                 else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
+
+            // warp find
             "find" -> {
 
             }
