@@ -254,7 +254,12 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$z")
-                        sender.sendMessage("${ChatColor.GOLD}  - 描述: ${ChatColor.RESET}${entry.description}")
+                        sender.spigot().sendMessage(*ComponentBuilder("${ChatColor.GOLD}  - 描述: ")
+                            .append(ComponentBuilder("${ChatColor.RESET}${entry.description}")
+                                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set-des $name "))
+                                .event(TextComponent("点击修改").hoverEvent)
+                                .create())
+                            .create())
                         sender.spigot().sendMessage(*ComponentBuilder(" ")
                             .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
                             .create())
@@ -266,6 +271,16 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
 
             // warp set-des <name> <description>
             "set-des" -> {
+                if (args.size > 2) {
+                    val entry = warps[sender.uniqueId]!![args[1]]
+                    if (entry == null)
+                        sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 不存在")
+                    else {
+                        entry.description = args[2]
+                        sender.sendMessage("成功修改地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RESET} 的描述")
+                    }
+                }
+                else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
 
             // warp share <name>
