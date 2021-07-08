@@ -4,6 +4,7 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
+import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.TextComponent
@@ -15,6 +16,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.NumberFormatException
+import kotlin.collections.ArrayList
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -146,42 +148,8 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     tmpWarps.values.forEachIndexed { index, entry ->
                         if (index > lastIndex) return@forEachIndexed
                         if (index >= firstIndex) {
-                            val location = entry.location
-                            val name = entry.name
-                            val x = floor(location.x)
-                            val y = floor(location.y)
-                            val z = floor(location.z)
-                            val buttonShare =
-                                ComponentBuilder("${ChatColor.AQUA}[分享]")
-                                    .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
-                                    .event(TextComponent("点击将地标信息发送给所有人").hoverEvent)
-                                    .create()
-                            val buttonDelete =
-                                ComponentBuilder("${ChatColor.RED}[删除]")
-                                    .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
-                                    .event(TextComponent("${ChatColor.RED}点击删除这个地标").hoverEvent)
-                                    .create()
-                            val buttonSet =
-                                ComponentBuilder("${ChatColor.GREEN}[设为当前]")
-                                    .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
-                                    .event(TextComponent("点击输入指令").hoverEvent)
-                                    .create()
-                            val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-                                "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-                                "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-                                "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-                                else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                                        "${ChatColor.RESET}${ChatColor.BOLD}$world"
-                            }
                             sender.spigot().sendMessage(*ComponentBuilder("$index. ")
-                                .append(ComponentBuilder(textName)
-                                    .event(TextComponent(entry.description).hoverEvent)
-                                    .create()).append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
-                                        "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
-                                        "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
-                                        "${ChatColor.UNDERLINE}$z${ChatColor.RESET} ")
-                                .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
-                                .create())
+                                .append(getWarpInfo(entry)).create())
                         }
                     }
 
@@ -342,7 +310,25 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
 
             // warp find
             "find" -> {
-
+                if (args.size > 1 && args[1].isNotEmpty()) {
+                    val tmpWarps = warps[sender.uniqueId]!!
+                    //筛选关键词
+                    val keyWord = args[1]
+                    val tmp: ArrayList<LocationEntry> = ArrayList()
+                    tmpWarps.forEach { (name, loc) ->
+                        if (name.contains(keyWord, ignoreCase = true)) tmp += loc
+                    }
+                    if (tmp.isEmpty()) {
+                        sender.sendMessage("${ChatColor.RED}未找到任何地标")
+                    }
+                    else {
+                        sender.sendMessage("${ChatColor.GOLD} 在 ${tmp.size} 个地标中找到了 " +
+                                "${ChatColor.RED}${ChatColor.BOLD}$keyWord${ChatColor.RESET}${ChatColor.GOLD} :")
+                        tmp.forEach { loc ->
+                            getWarpInfo(loc)?.let { sender.spigot().sendMessage(*it) }
+                        }
+                    }
+                }
             }
             else -> {
                 sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
@@ -357,6 +343,44 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             return false
         }
         return true
+    }
+
+    private fun getWarpInfo(entry: LocationEntry): Array<out BaseComponent>? {
+        val location = entry.location
+        val name = entry.name
+        val x = floor(location.x)
+        val y = floor(location.y)
+        val z = floor(location.z)
+        val buttonShare =
+            ComponentBuilder("${ChatColor.AQUA}[分享]")
+                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
+                .event(TextComponent("点击将地标信息发送给所有人").hoverEvent)
+                .create()
+        val buttonDelete =
+            ComponentBuilder("${ChatColor.RED}[删除]")
+                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
+                .event(TextComponent("${ChatColor.RED}点击删除这个地标").hoverEvent)
+                .create()
+        val buttonSet =
+            ComponentBuilder("${ChatColor.GREEN}[设为当前]")
+                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
+                .event(TextComponent("点击输入指令").hoverEvent)
+                .create()
+        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
+            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
+        }
+        return ComponentBuilder(textName)
+                .event(TextComponent(entry.description).hoverEvent)
+                .append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
+                    "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
+                    "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
+                    "${ChatColor.UNDERLINE}$z${ChatColor.RESET} ")
+            .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
+            .create()
     }
 
     private fun getWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
