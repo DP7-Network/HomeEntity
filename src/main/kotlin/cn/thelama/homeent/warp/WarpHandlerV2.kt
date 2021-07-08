@@ -6,9 +6,8 @@ import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
-import net.md_5.bungee.api.chat.HoverEvent
 import net.md_5.bungee.api.chat.TextComponent
-import net.md_5.bungee.api.chat.hover.content.Content
+import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -17,10 +16,11 @@ import org.bukkit.entity.Player
 import java.util.*
 import kotlin.NumberFormatException
 import kotlin.math.ceil
+import kotlin.math.floor
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
-    private val warps: MutableMap<UUID, MutableMap<String, LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
-    private val ops = listOf("set", "rm", "list", "lookup", "desc", "share", "find")
+    private val warps = getWarps()
+    private val ops = listOf("set", "rm", "list", "detail", "desc", "share", "find")
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
@@ -33,7 +33,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             return true
         }
         if(sender.uniqueId !in warps) {
-            warps[sender.uniqueId] = hashMapOf()
+            warps[sender.uniqueId] = linkedMapOf()
         }
 
         when(args[0]) {
@@ -48,11 +48,11 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 return true
                             }
                             if(args.size > 5) {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
                                     args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), args[5])
 
                             } else {
-                                warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                                warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
                                     args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
                             }
                             sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
@@ -61,7 +61,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 val message = it.message!!
                                 val err = message.substring(19, message.length - 2)
                                 sender.sendMessage("${ChatColor.YELLOW}$err${ChatColor.RED} 不是一个有效数字")
-                            } else throw it;
+                            } else throw it
                         }
                     }
                     else -> {
@@ -70,11 +70,11 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                         }
 
                         if(args.size > 2) {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                            warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
                                 sender.location.x, sender.location.y, sender.location.z), args[2])
 
                         } else {
-                            warps[sender.uniqueId]!![args[1]] = LocationEntry(LocationWrapper(sender.world.uid,
+                            warps[sender.uniqueId]!![args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
                                 sender.location.x, sender.location.y, sender.location.z), "")
                         }
                         sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
@@ -107,13 +107,58 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     /* 第一部分: 遍历地标并逐行显示 */
                     val lastIndex = currentPage * 7 - 1
                     val firstIndex = lastIndex - 6
-                    //TODO 已确认需要修改数据结构，MutableMap是无序的，可能每次遍历的顺序都不同
+                    //已确认需要修改数据结构，MutableMap是无序的, 可能每次遍历的顺序都不同(目前改为 `LinkedHashMap` ).
+                    //同时原数据结构遍历时无法获取地标名称, 故无法直接根据点击的操作执行相应地标的指令, 因此在
+                    //LocationWrapper 中添加了 name:String 属性, 以方便直接获取地标名称;
+                    //但这样导致存储时数据多余(会存储两个 name 属性), 因此存储时改为直接存储一个 `List<LocationWrapper>` ,
+                    //加载时将该列表重新处理为 LinkedHashMap 从而做到不影响其他功能.
+                    //(这种数据结构相较于之前, 多了warp点数量的引用和玩家数量的 HashMap 对象, 其余不变,
+                    //故几乎不会占用更多内存, 只是加载和保存时处理时间会增加.)
+                    tmpWarps.values.forEachIndexed { index, entry ->
+                        if (index > lastIndex) return@forEachIndexed
+                        if (index >= firstIndex) {
+                            val location = entry.location
+                            val name = entry.name
+                            val x = floor(location.x)
+                            val y = floor(location.y)
+                            val z = floor(location.z)
+                            val buttonShare =
+                                ComponentBuilder("${ChatColor.AQUA}[分享]")
+                                    .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
+                                    .event(TextComponent("点击将地标信息发送给所有人").hoverEvent)
+                                    .create()
+                            val buttonDelete =
+                                ComponentBuilder("${ChatColor.RED}[删除]")
+                                    .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
+                                    .event(TextComponent("${ChatColor.RED}点击删除").hoverEvent)
+                                    .create()
+                            val buttonSet =
+                                ComponentBuilder("${ChatColor.GREEN}[设为当前位置]")
+                                    .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
+                                    .event(TextComponent("点击输入指令").hoverEvent)
+                                    .create()
+                            val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
+                                "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+                                "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+                                "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+                                else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                                        "${ChatColor.RESET}${ChatColor.BOLD}$world"
+                            }
+                            sender.spigot().sendMessage(*ComponentBuilder(
+                                "$index. $textName${ChatColor.GRAY} at " +
+                                        "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
+                                        "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
+                                        "${ChatColor.UNDERLINE}$z${ChatColor.RESET} ")
+                                .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
+                                .create())
+                        }
+                    }
 
                     /* 第二部分: 显示页数信息 */
                     val pageButton1 =
                         if (currentPage == 1)
                             ComponentBuilder(
-                                "${ChatColor.GOLD}[${ChatColor.GRAY}已经是第一页了${ChatColor.GOLD}]").create()
+                                "${ChatColor.GOLD}[${ChatColor.DARK_GRAY}已经是第一页了${ChatColor.GOLD}]").create()
                         else {
                             val previousPage = currentPage - 1
                             ComponentBuilder(
@@ -123,7 +168,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     val pageButton2 =
                         if (currentPage == allPagesNumber)
                             ComponentBuilder(
-                                "${ChatColor.GOLD}[${ChatColor.GRAY}已经是最后一页了${ChatColor.GOLD}]").create()
+                                "${ChatColor.GOLD}[${ChatColor.DARK_GRAY}已经是最后一页了${ChatColor.GOLD}]").create()
                         else {
                             val nextPage = currentPage + 1
                             ComponentBuilder(
@@ -161,9 +206,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     }
                     showList(currentPage)
                 }
-                else showList(1);
+                else showList(1)
             }
-            "lookup" -> {
+            "detail" -> {
             }
             "desc" -> {
             }
@@ -171,20 +216,35 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             }
             "find" -> {
             }
+            else -> {
+            }
         }
         return true
     }
 
     private fun checkName(name: String, sender: CommandSender): Boolean {
         if(name in ops) {
-            sender.sendMessage("${ChatColor.RED}'$name'不可以做为地标的名称, 更多内容请查看帮助")
+            sender.sendMessage("${ChatColor.GOLD}$name${ChatColor.RED} 不可以做为地标的名称, 更多内容请查看帮助")
             return false
         }
         return true
     }
 
+    private fun getWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
+        val initWarps: MutableMap<UUID, List<LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
+        val warps = hashMapOf<UUID, LinkedHashMap<String, LocationEntry>>()
+        initWarps.forEach { (uuid, entries) ->
+            val tmpLinkedMap = linkedMapOf<String, LocationEntry>()
+            entries.forEach { tmpLinkedMap[it.name] = it }
+            warps[uuid] = tmpLinkedMap
+        }
+        return warps
+    }
+
     override fun save() {
-        ModuledPlayerDataManager.setAllTyped("warp", warps)
+        val tmpMap: MutableMap<UUID, List<LocationEntry>> = hashMapOf()
+        warps.forEach { (uuid, entries) -> tmpMap[uuid] = entries.values.toList() }
+        ModuledPlayerDataManager.setAllTyped("warp", tmpMap)
     }
 
     override fun config(uuid: UUID): MutableMap<String, LocationEntry>? = warps[uuid]
