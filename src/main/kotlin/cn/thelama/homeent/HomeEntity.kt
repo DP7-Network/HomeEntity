@@ -325,7 +325,7 @@ class HomeEntity : JavaPlugin(), Listener {
         e.player.sendMessage("${ChatColor.GOLD}  欢迎来到${config.getString("main.serverName")}      ")
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.l <密码>'       来登录")
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册")
-        e.player.sendMessage("${ChatColor.RED}  <如果忘记密码请找管理员重置>")
+        e.player.sendMessage("${ChatColor.RED}  若忘记密码请找在线管理员重置")
         e.player.sendMessage("${ChatColor.GRAY}============================")
         SecureHandler.limit(e.player)
 
@@ -334,7 +334,7 @@ class HomeEntity : JavaPlugin(), Listener {
                 SecureHandler.removeLimit(e.player)
             } else {
                 SecureHandler.setLoginState(e.player.uniqueId, false)
-                e.player.kickPlayer("${ChatColor.RED} 给你的登陆时间没有那么多，按快点OK?")
+                e.player.kickPlayer("${ChatColor.RED}登录验证超时")
             }
         }, 30 * 20)
 
@@ -398,7 +398,7 @@ class HomeEntity : JavaPlugin(), Listener {
         } else {
             val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
             if(jsonTree["number"].asInt > BUILD_NUMBER || sync) {
-                Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到准备更新!")
+                Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到, 准备更新!")
                 FileUtils.copyToFile(
                     URL("http://s1.lama3l9r.net/job/$stream" +
                             "/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar")
