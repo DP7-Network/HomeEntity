@@ -16,6 +16,7 @@ import cn.thelama.homeent.show.ShowHandler
 import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.tpa.*
+import cn.thelama.homeent.warp.HomeHandler
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
@@ -188,6 +189,15 @@ class HomeEntity : JavaPlugin(), Listener {
 
             }
 
+            this.getCommand("home")!!.apply {
+                setExecutor(HomeHandler)
+                logger.info("    ${ChatColor.GREEN}Command home registered successfully")
+            }
+
+            this.getCommand("sethome")!!.apply {
+                setExecutor(HomeHandler)
+                logger.info("    ${ChatColor.GREEN}Command sethome registered successfully")
+            }
 
             logger.info("  Register events...")
 
