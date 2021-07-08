@@ -20,7 +20,7 @@ import kotlin.math.floor
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
     private val warps = getWarps()
-    private val ops = listOf("set", "rm", "list", "detail", "desc", "share", "find")
+    val ops = listOf("set", "rm", "list", "detail", "desc", "share", "find")
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
@@ -83,7 +83,20 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             }
             "rm" -> {
                 if(args.size > 1) {
-                    warps[sender.uniqueId]!!.remove(args[1])
+                    if (args.size > 2 && args[2] == "force")
+                        warps[sender.uniqueId]!!.remove(args[1])
+                    else {
+                        val confirmButton = ComponentBuilder(
+                            "${ChatColor.GOLD}${ChatColor.UNDERLINE}点击这里${ChatColor.RESET}")
+                            .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm ${args[1]} force"))
+                            .event(TextComponent("${ChatColor.RED}该操作不可逆").hoverEvent)
+                            .create()
+                        sender.sendMessage("${ChatColor.RED}确定要删除 ${ChatColor.GOLD}${args[1]}" +
+                                "${ChatColor.RED} 吗, 该地标将会永久失去! (真的很久!)")
+                        sender.spigot().sendMessage(*ComponentBuilder(
+                            "${ChatColor.YELLOW}请在最后添加 ${ChatColor.GOLD}force${ChatColor.YELLOW} 参数或")
+                            .append(confirmButton).append("${ChatColor.YELLOW}确认").create())
+                    }
                 } else {
                     sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
                 }
@@ -130,10 +143,10 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                             val buttonDelete =
                                 ComponentBuilder("${ChatColor.RED}[删除]")
                                     .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
-                                    .event(TextComponent("${ChatColor.RED}点击删除").hoverEvent)
+                                    .event(TextComponent("${ChatColor.RED}点击删除这个地标").hoverEvent)
                                     .create()
                             val buttonSet =
-                                ComponentBuilder("${ChatColor.GREEN}[设为当前位置]")
+                                ComponentBuilder("${ChatColor.GREEN}[设为当前]")
                                     .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                                     .event(TextComponent("点击输入指令").hoverEvent)
                                     .create()
@@ -144,8 +157,10 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
                                         "${ChatColor.RESET}${ChatColor.BOLD}$world"
                             }
-                            sender.spigot().sendMessage(*ComponentBuilder(
-                                "$index. $textName${ChatColor.GRAY} at " +
+                            sender.spigot().sendMessage(*ComponentBuilder("$index. ")
+                                .append(ComponentBuilder(textName)
+                                    .event(TextComponent(entry.description).hoverEvent)
+                                    .create()).append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
                                         "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                         "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
                                         "${ChatColor.UNDERLINE}$z${ChatColor.RESET} ")
@@ -209,14 +224,98 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 else showList(1)
             }
             "detail" -> {
+                if (args.size > 1) {
+                    val entry = warps[sender.uniqueId]!![args[1]]
+                    if (entry == null) {
+                        sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 不存在")
+                    } else {
+                        val location = entry.location
+                        val name = entry.name
+                        val x = floor(location.x)
+                        val y = floor(location.y)
+                        val z = floor(location.z)
+                        val buttonShare =
+                            ComponentBuilder("${ChatColor.AQUA}${ChatColor.UNDERLINE}分享地标${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
+                                .event(TextComponent("点击将地标信息发送给所有人").hoverEvent)
+                                .create()
+                        val buttonDelete =
+                            ComponentBuilder("${ChatColor.RED}${ChatColor.UNDERLINE}删除地标${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
+                                .event(TextComponent("${ChatColor.RED}点击删除这个地标").hoverEvent)
+                                .create()
+                        val buttonSet =
+                            ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}设为当前位置${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
+                                .event(TextComponent("点击输入指令").hoverEvent)
+                                .create()
+                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
+                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
+                        }
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                        sender.sendMessage("${ChatColor.GOLD} 地标 $textName${ChatColor.GOLD} 的详细信息")
+                        sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
+                                "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$z")
+                        sender.sendMessage("${ChatColor.GOLD}  - 描述: ${ChatColor.RESET}${entry.description}")
+                        sender.spigot().sendMessage(*ComponentBuilder(" ")
+                            .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
+                            .create())
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                    }
+                }
+                else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
             "desc" -> {
             }
             "share" -> {
+                if (args.size > 1) {
+                    val entry = warps[sender.uniqueId]!![args[1]]
+                    if (entry == null) {
+                        sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 不存在")
+                    } else {
+                        val location = entry.location
+                        val name = entry.name
+                        val x = floor(location.x)
+                        val y = floor(location.y)
+                        val z = floor(location.z)
+                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
+                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
+                        }
+                        val addButton =
+                            ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}添加该位置${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
+                                    "/warp set $name ${location.x} ${location.y} ${location.z}"))
+                                .event(TextComponent("点击输入指令").hoverEvent)
+                                .create()
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                        sender.sendMessage("${ChatColor.AQUA} ${sender.displayName}" +
+                                "${ChatColor.GOLD} 分享了地标 $textName${ChatColor.GOLD}")
+                        sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
+                                "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$z")
+                        sender.sendMessage("${ChatColor.GOLD}  - 描述: ${ChatColor.RESET}${entry.description}")
+                        sender.spigot().sendMessage(*ComponentBuilder(" ").append(addButton).create())
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                    }
+                }
+                else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
             "find" -> {
+
             }
             else -> {
+                sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
         }
         return true
