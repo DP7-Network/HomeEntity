@@ -21,7 +21,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
-    private val warps = loadWarps()
+    private val warps: MutableMap<UUID, LinkedHashMap<String, LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
     val ops = listOf("set", "rm", "list", "detail", "set-des", "share", "find")
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
@@ -398,24 +398,13 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             .create()
     }
 
-    private fun loadWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
-        val initWarps: MutableMap<UUID, List<LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
-        val warps = hashMapOf<UUID, LinkedHashMap<String, LocationEntry>>()
-        initWarps.forEach { (uuid, entries) ->
-            val tmpLinkedMap = linkedMapOf<String, LocationEntry>()
-            entries.forEach { tmpLinkedMap[it.name] = it }
-            warps[uuid] = tmpLinkedMap
-        }
-        return warps
-    }
-
     fun getHomeLocation(player: Player): LocationWrapper? {
         return warps[player.uniqueId]!!["home"]?.location
     }
 
     fun setHomeLocation(player: Player, isForce: Boolean = false): Boolean {
         val tmpMap = warps[player.uniqueId]!!
-        if (!isForce && tmpMap.containsKey("home")) return false
+        if (!isForce && "home" in tmpMap) return false
         val location = player.location
         tmpMap["home"] = LocationEntry("home", LocationWrapper(player.world.uid,
             location.x, location.y, location.z), "由 /sethome 指令自动设置的家地标")
@@ -423,9 +412,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
     }
 
     override fun save() {
-        val tmpMap: MutableMap<UUID, List<LocationEntry>> = hashMapOf()
-        warps.forEach { (uuid, entries) -> tmpMap[uuid] = entries.values.toList() }
-        ModuledPlayerDataManager.setAllTyped("warp", tmpMap)
+        ModuledPlayerDataManager.setAllTyped("warp", warps)
     }
 
     override fun config(uuid: UUID): MutableMap<String, LocationEntry>? = warps[uuid]
