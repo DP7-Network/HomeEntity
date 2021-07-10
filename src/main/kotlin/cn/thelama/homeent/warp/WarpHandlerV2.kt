@@ -241,15 +241,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
-                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-                        }
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
-                        sender.sendMessage("${ChatColor.GOLD} 地标 $textName${ChatColor.GOLD} 的详细信息")
+                        sender.sendMessage("${ChatColor.GOLD} 地标 ${getColoredName(location.world, name)}" +
+                                "${ChatColor.GOLD} 的详细信息")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
@@ -295,13 +289,6 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                         val x = floor(location.x)
                         val y = floor(location.y)
                         val z = floor(location.z)
-                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-                        }
                         val addButton =
                             ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}添加该位置${ChatColor.RESET}")
                                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
@@ -309,8 +296,8 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
-                        sender.sendMessage("${ChatColor.AQUA} ${sender.displayName}" +
-                                "${ChatColor.GOLD} 分享了地标 $textName${ChatColor.GOLD}")
+                        sender.sendMessage("${ChatColor.AQUA} ${sender.name}${ChatColor.GOLD} " +
+                                "分享了地标 ${getColoredName(location.world, name)}${ChatColor.GOLD}")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
@@ -381,14 +368,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                 .event(TextComponent("点击输入指令").hoverEvent)
                 .create()
-        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-        }
-        return ComponentBuilder(textName)
+        return ComponentBuilder(getColoredName(location.world, name))
                 .event(TextComponent(entry.description).hoverEvent)
                 .append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
                     "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
@@ -396,6 +376,16 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     "${ChatColor.UNDERLINE}$z${ChatColor.RESET} ")
             .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
             .create()
+    }
+
+    private fun getColoredName(worldUid: UUID, name: String): String {
+        return when(val world = Bukkit.getWorld(worldUid)!!.name) {
+            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
+        }
     }
 
     private fun loadWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
