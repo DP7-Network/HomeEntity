@@ -1,20 +1,31 @@
 package cn.thelama.homeent.module
 
-import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonDeserializer
 import com.google.gson.JsonObject
+import com.google.gson.JsonSerializer
 import com.google.gson.reflect.TypeToken
+import org.bukkit.Bukkit
+import org.bukkit.World
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
+import java.lang.ref.Reference
+import java.lang.ref.WeakReference
 import java.util.*
-import kotlin.collections.HashMap
 
 /**
  * Not tested feature!
  * TODO: Test this feature
  */
 object ModuledPlayerDataManager {
-    private val gson = Gson()
+    private val gson = GsonBuilder().registerTypeAdapter(object: TypeToken<Reference<World>>() {}.type, JsonSerializer<Reference<World>> { obj, _, _ ->
+        val field = JsonObject()
+        field.addProperty("uid", obj.get()?.uid.toString())
+        field
+    }).registerTypeAdapter(object: TypeToken<Reference<World>>() {}.type, JsonDeserializer<Reference<World>> { element, _, _ ->
+        WeakReference(Bukkit.getWorld(UUID.fromString((element as JsonObject)["uid"].asString)))
+    }).create()
     //                             Player UUID    |   Module Name | Module Player Data Json Tree
     private val playerRoot: MutableMap<UUID, MutableMap<String, JsonObject>> = hashMapOf()
 
