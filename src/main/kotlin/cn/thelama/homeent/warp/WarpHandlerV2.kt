@@ -21,7 +21,7 @@ import kotlin.math.ceil
 import kotlin.math.floor
 
 object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
-    private val warps: MutableMap<UUID, LinkedHashMap<String, LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
+    private val warps = loadWarps()
     val ops = listOf("set", "rm", "list", "detail", "set-des", "share", "find")
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
@@ -241,15 +241,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
-                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-                        }
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
-                        sender.sendMessage("${ChatColor.GOLD} 地标 $textName${ChatColor.GOLD} 的详细信息")
+                        sender.sendMessage("${ChatColor.GOLD} 地标 ${getColoredName(location.world, name)}" +
+                                "${ChatColor.GOLD} 的详细信息")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
@@ -295,13 +289,6 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                         val x = floor(location.x)
                         val y = floor(location.y)
                         val z = floor(location.z)
-                        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-                            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-                            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-                            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-                            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-                        }
                         val addButton =
                             ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}添加该位置${ChatColor.RESET}")
                                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
@@ -309,8 +296,8 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
-                        sender.sendMessage("${ChatColor.AQUA} ${sender.displayName}" +
-                                "${ChatColor.GOLD} 分享了地标 $textName${ChatColor.GOLD}")
+                        sender.sendMessage("${ChatColor.AQUA} ${sender.name}${ChatColor.GOLD} " +
+                                "分享了地标 ${getColoredName(location.world, name)}${ChatColor.GOLD}")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
@@ -381,14 +368,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                 .event(TextComponent("点击输入指令").hoverEvent)
                 .create()
-        val textName = when(val world = Bukkit.getWorld(location.world)!!.name) {
-            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
-            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
-            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
-            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
-                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
-        }
-        return ComponentBuilder(textName)
+        return ComponentBuilder(getColoredName(location.world, name))
                 .event(TextComponent(entry.description).hoverEvent)
                 .append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
                     "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
@@ -398,13 +378,34 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             .create()
     }
 
+    private fun getColoredName(worldUid: UUID, name: String): String {
+        return when(val world = Bukkit.getWorld(worldUid)!!.name) {
+            "world" -> "${ChatColor.GREEN}${ChatColor.BOLD}$name"
+            "world_nether" -> "${ChatColor.DARK_RED}${ChatColor.BOLD}$name"
+            "world_the_end" -> "${ChatColor.LIGHT_PURPLE}${ChatColor.BOLD}$name"
+            else -> "${ChatColor.BLUE}${ChatColor.BOLD}$name${ChatColor.GRAY} in " +
+                    "${ChatColor.RESET}${ChatColor.BOLD}$world"
+        }
+    }
+
+    private fun loadWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
+        val initWarps: MutableMap<UUID, List<LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
+        val warps = hashMapOf<UUID, LinkedHashMap<String, LocationEntry>>()
+        initWarps.forEach { (uuid, entries) ->
+            val tmpLinkedMap = linkedMapOf<String, LocationEntry>()
+            entries.forEach { tmpLinkedMap[it.name] = it }
+            warps[uuid] = tmpLinkedMap
+        }
+        return warps
+    }
+
     fun getHomeLocation(player: Player): LocationWrapper? {
         return warps[player.uniqueId]!!["home"]?.location
     }
 
     fun setHomeLocation(player: Player, isForce: Boolean = false): Boolean {
         val tmpMap = warps[player.uniqueId]!!
-        if (!isForce && "home" in tmpMap) return false
+        if (!isForce && tmpMap.containsKey("home")) return false
         val location = player.location
         tmpMap["home"] = LocationEntry("home", LocationWrapper(player.world.uid,
             location.x, location.y, location.z), "由 /sethome 指令自动设置的家地标")
@@ -412,7 +413,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
     }
 
     override fun save() {
-        ModuledPlayerDataManager.setAllTyped("warp", warps)
+        val tmpMap: MutableMap<UUID, List<LocationEntry>> = hashMapOf()
+        warps.forEach { (uuid, entries) -> tmpMap[uuid] = entries.values.toList() }
+        ModuledPlayerDataManager.setAllTyped("warp", tmpMap)
     }
 
     override fun config(uuid: UUID): MutableMap<String, LocationEntry>? = warps[uuid]

@@ -338,10 +338,14 @@ class HomeEntity : JavaPlugin(), Listener {
         e.player.sendMessage("${ChatColor.RED}  若忘记密码请找在线管理员重置")
         e.player.sendMessage("${ChatColor.GRAY}============================")
         SecureHandler.limit(e.player)
+        e.player.setDisplayName(
+            "${ChatColor.AQUA}[${ChatColor.RESET}未登录${ChatColor.AQUA}] ${e.player.name}")
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {
             if(SecureHandler.getLoginState(e.player.uniqueId)) {
                 SecureHandler.removeLimit(e.player)
+                e.player.setDisplayName(
+                        "${ChatColor.AQUA}[${parseWorld(e.player.world.name)}${ChatColor.AQUA}] ${e.player.name}")
             } else {
                 SecureHandler.setLoginState(e.player.uniqueId, false)
                 e.player.kickPlayer("${ChatColor.RED}登录验证超时")
