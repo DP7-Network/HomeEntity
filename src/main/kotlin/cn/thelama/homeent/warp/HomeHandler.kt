@@ -23,7 +23,7 @@ object HomeHandler : CommandExecutor {
                     sender.sendMessage("${ChatColor.YELLOW}未设置家")
                     return true
                 }
-                sender.teleport(location.toLoc(sender))
+                sender.teleport(location)
             }
 
             "sethome" -> {

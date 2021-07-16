@@ -10,6 +10,7 @@ import net.md_5.bungee.api.chat.ComponentBuilder
 import net.md_5.bungee.api.chat.TextComponent
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.Location
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
@@ -17,12 +18,17 @@ import org.bukkit.entity.Player
 import java.util.*
 import kotlin.NumberFormatException
 import kotlin.collections.ArrayList
+import kotlin.collections.LinkedHashMap
 import kotlin.math.ceil
 import kotlin.math.floor
 
-object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<MutableMap<String, LocationEntry>?> {
-    private val warps = loadWarps()
+object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<LinkedHashMap<String, LocationEntry>?> {
+    private var warps: MutableMap<UUID, LinkedHashMap<String, LocationEntry>>
     val ops = listOf("set", "rm", "list", "detail", "set-des", "share", "find")
+
+    init {
+        warps = ModuledPlayerDataManager.getAllTyped("warp")
+    }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
@@ -35,7 +41,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
             return true
         }
         if(sender.uniqueId !in warps) {
-            warps[sender.uniqueId] = linkedMapOf()
+            warps[sender.uniqueId] = LinkedHashMap()
         }
 
         when(args[0]) {
@@ -66,8 +72,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 return true
                             }
                             if (args.size > 5 && args[5] == "force" || !tmpMap.containsKey(args[1])) {
-                                tmpMap[args[1]] = LocationEntry(args[1], LocationWrapper(sender.world.uid,
-                                        args[2].toDouble(), args[3].toDouble(), args[4].toDouble()), "")
+                                tmpMap[args[1]] = LocationEntry(args[1], args[2].toDouble(), args[3].toDouble(), args[4].toDouble(), GameWorld.toConfigurationID(sender.world.uid), "")
                                 sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                             }
                             else warn("/warp set ${args[1]} ${args[2]} ${args[3]} ${args[4]} force")
@@ -84,10 +89,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                             return true
                         }
                         if (args.size > 3 && args[2] == "force" || !tmpMap.containsKey(args[1])) {
-                            tmpMap[args[1]] = LocationEntry(
-                                args[1], LocationWrapper(sender.world.uid,
-                                    sender.location.x, sender.location.y, sender.location.z), ""
-                            )
+                            tmpMap[args[1]] = LocationEntry(args[1], sender.location.x, sender.location.y, sender.location.z, GameWorld.toConfigurationID(sender.world.uid),"")
                             sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
                         }
                         else warn("/warp set ${args[1]} force")
@@ -221,11 +223,10 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     if (entry == null) {
                         sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 不存在")
                     } else {
-                        val location = entry.location
                         val name = entry.name
-                        val x = floor(location.x)
-                        val y = floor(location.y)
-                        val z = floor(location.z)
+                        val x = floor(entry.x)
+                        val y = floor(entry.y)
+                        val z = floor(entry.z)
                         val buttonShare =
                             ComponentBuilder("${ChatColor.AQUA}${ChatColor.UNDERLINE}分享地标${ChatColor.RESET}")
                                 .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
@@ -242,7 +243,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
-                        sender.sendMessage("${ChatColor.GOLD} 地标 ${getColoredName(location.world, name)}" +
+                        sender.sendMessage("${ChatColor.GOLD} 地标 ${getColoredName(entry.getWorld()!!.uid, name)}" +
                                 "${ChatColor.GOLD} 的详细信息")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
@@ -284,20 +285,19 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                     if (entry == null) {
                         sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[1]}${ChatColor.RED} 不存在")
                     } else {
-                        val location = entry.location
                         val name = entry.name
-                        val x = floor(location.x)
-                        val y = floor(location.y)
-                        val z = floor(location.z)
+                        val x = floor(entry.x)
+                        val y = floor(entry.y)
+                        val z = floor(entry.z)
                         val addButton =
                             ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}添加该位置${ChatColor.RESET}")
                                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
-                                    "/warp set $name ${location.x} ${location.y} ${location.z}"))
+                                    "/warp set $name ${entry.x} ${entry.y} ${entry.z}"))
                                 .event(TextComponent("点击输入指令").hoverEvent)
                                 .create()
                         sender.sendMessage("${ChatColor.GOLD}=======================================")
                         sender.sendMessage("${ChatColor.AQUA} ${sender.name}${ChatColor.GOLD} " +
-                                "分享了地标 ${getColoredName(location.world, name)}${ChatColor.GOLD}")
+                                "分享了地标 ${getColoredName(entry.getWorld()!!.uid, name)}${ChatColor.GOLD}")
                         sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
                                 "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
                                 "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
@@ -348,11 +348,10 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
     }
 
     private fun getWarpInfo(entry: LocationEntry): Array<out BaseComponent>? {
-        val location = entry.location
         val name = entry.name
-        val x = floor(location.x)
-        val y = floor(location.y)
-        val z = floor(location.z)
+        val x = floor(entry.x)
+        val y = floor(entry.y)
+        val z = floor(entry.z)
         val buttonShare =
             ComponentBuilder("${ChatColor.AQUA}[分享]")
                 .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
@@ -368,7 +367,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
                 .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
                 .event(TextComponent("点击输入指令").hoverEvent)
                 .create()
-        return ComponentBuilder(getColoredName(location.world, name))
+        return ComponentBuilder(getColoredName(entry.getWorld()!!.uid, name))
                 .event(TextComponent(entry.description).hoverEvent)
                 .append("${ChatColor.GRAY} at ${ChatColor.RESET}" +
                     "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
@@ -388,35 +387,21 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Mutabl
         }
     }
 
-    private fun loadWarps(): MutableMap<UUID, LinkedHashMap<String, LocationEntry>> {
-        val initWarps: MutableMap<UUID, List<LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp")
-        val warps = hashMapOf<UUID, LinkedHashMap<String, LocationEntry>>()
-        initWarps.forEach { (uuid, entries) ->
-            val tmpLinkedMap = linkedMapOf<String, LocationEntry>()
-            entries.forEach { tmpLinkedMap[it.name] = it }
-            warps[uuid] = tmpLinkedMap
-        }
-        return warps
-    }
-
-    fun getHomeLocation(player: Player): LocationWrapper? {
-        return warps[player.uniqueId]!!["home"]?.location
+    fun getHomeLocation(player: Player): Location? {
+        return warps[player.uniqueId]!!["home"]?.createLocation()
     }
 
     fun setHomeLocation(player: Player, isForce: Boolean = false): Boolean {
         val tmpMap = warps[player.uniqueId]!!
         if (!isForce && tmpMap.containsKey("home")) return false
         val location = player.location
-        tmpMap["home"] = LocationEntry("home", LocationWrapper(player.world.uid,
-            location.x, location.y, location.z), "由 /sethome 指令自动设置的家地标")
+        tmpMap["home"] = LocationEntry("home", location.x, location.y, location.z, GameWorld.toConfigurationID(player.world.uid), "由 /sethome 指令自动设置的家地标")
         return true
     }
 
     override fun save() {
-        val tmpMap: MutableMap<UUID, List<LocationEntry>> = hashMapOf()
-        warps.forEach { (uuid, entries) -> tmpMap[uuid] = entries.values.toList() }
-        ModuledPlayerDataManager.setAllTyped("warp", tmpMap)
+        ModuledPlayerDataManager.setAllTyped("warp", warps)
     }
 
-    override fun config(uuid: UUID): MutableMap<String, LocationEntry>? = warps[uuid]
+    override fun config(uuid: UUID): LinkedHashMap<String, LocationEntry>? = warps[uuid]
 }

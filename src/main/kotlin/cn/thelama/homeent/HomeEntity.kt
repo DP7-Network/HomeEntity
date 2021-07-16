@@ -4,6 +4,7 @@ package cn.thelama.homeent
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.module.ModuledPlayerDataManager
+import cn.thelama.homeent.mylovelycat.MyLovelyCat
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
 import cn.thelama.homeent.relay.Relay
@@ -17,6 +18,7 @@ import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.tpa.*
 import cn.thelama.homeent.warp.HomeHandler
+import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
@@ -27,6 +29,8 @@ import kotlinx.coroutines.launch
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
+import net.minecraft.server.MinecraftServer
+import net.minecraft.server.dedicated.DedicatedServer
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.bukkit.*
@@ -35,6 +39,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
 import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils
+import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -42,6 +47,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
+import org.yaml.snakeyaml.Yaml
 import sun.misc.Unsafe
 import java.io.File
 import java.io.FileWriter
@@ -53,6 +59,7 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.system.measureTimeMillis
 import pw.yumc.Yum.api.YumAPI
+import java.io.FileReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
@@ -62,6 +69,12 @@ class HomeEntity : JavaPlugin(), Listener {
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
         var BUILD_NUMBER: Int = 0
+        val theServer = run {
+            val server = Bukkit.getServer() as CraftServer
+            val dedicatedServerField = server.javaClass.getDeclaredField("console")
+            dedicatedServerField.isAccessible = true
+            dedicatedServerField.get(server) as DedicatedServer
+        }
     }
     private val gson = Gson()
 
@@ -75,6 +88,11 @@ class HomeEntity : JavaPlugin(), Listener {
         "${ChatColor.GOLD}» ${ChatColor.UNDERLINE}点击这里获取帮助${ChatColor.RESET}${ChatColor.GOLD} «")
         .event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity"))
         .create()).create()
+
+    override fun onLoad() {
+        logger.info("Preloading classes...")
+        logger.info(LocationEntry().toString())
+    }
 
     override fun onEnable() {
         instance = this
@@ -146,7 +164,7 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Command back registered successfully")
             }
 
-            this.getCommand("session")!!.apply {
+            this.getCommand("secure")!!.apply {
                 setExecutor(SecureHandler)
                 logger.info("    ${ChatColor.GREEN}Command session registered successfully")
             }
@@ -199,6 +217,24 @@ class HomeEntity : JavaPlugin(), Listener {
                 logger.info("    ${ChatColor.GREEN}Command sethome registered successfully")
             }
 
+            val catWeight = File(dataFolder, "cat")
+            if(!catWeight.exists()) {
+                catWeight.createNewFile()
+                MyLovelyCat.init(this, Math.random() * 10 + 7)
+            } else {
+                MyLovelyCat.init(this, FileReader(catWeight).readText().toDouble())
+            }
+
+            this.getCommand("cat")!!.apply {
+                setExecutor(MyLovelyCat)
+                logger.info("    ${ChatColor.GREEN}Command cat registered successfully")
+            }
+
+            this.getCommand("feed")!!.apply {
+                setExecutor(MyLovelyCat)
+                logger.info("    ${ChatColor.GREEN}Command feed registered successfully")
+            }
+
             logger.info("  Register events...")
 
             server.pluginManager.registerEvents(this, this)
@@ -238,6 +274,16 @@ class HomeEntity : JavaPlugin(), Listener {
         GlobalScope.launch {
             botInstance.shutdown()
         }
+
+        val catFile = File(dataFolder, "cat")
+        catFile.delete()
+        catFile.createNewFile()
+        FileWriter(catFile).apply {
+            write(MyLovelyCat.weight().toString())
+            flush()
+            close()
+        }
+
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")
     }
 
@@ -269,6 +315,27 @@ class HomeEntity : JavaPlugin(), Listener {
                             } else {
                                 sender.sendMessage("/hent sync <UpdateStream(HomeEntity|HomeEntity-Devel)>")
                             }
+                        }
+
+                        "debug" -> {
+                            Thread {
+                                val yaml = Yaml()
+                                val data = """
+warp:
+  a: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: a, world: 0,
+    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
+  b: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: b, world: 0,
+    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
+  c: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: c, world: 0,
+    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
+    """
+
+                                val d = yaml.loadAs(data, MutableMap::class.java)
+                                println(d)
+                                println(d::class.java)
+
+                                Class.forName(LocationEntry::class.java.name, true, Thread.currentThread().contextClassLoader)
+                            }.run()
                         }
                     }
                 }

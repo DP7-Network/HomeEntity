@@ -10,7 +10,7 @@ commands:
 
   back:
 
-  session:
+  secure:
 
   exit:
 
@@ -31,3 +31,7 @@ commands:
   home:
 
   sethome:
+
+  cat:
+
+  feed:

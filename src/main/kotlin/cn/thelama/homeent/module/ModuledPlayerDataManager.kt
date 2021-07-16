@@ -1,17 +1,9 @@
 package cn.thelama.homeent.module
 
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonDeserializer
-import com.google.gson.JsonObject
-import com.google.gson.JsonSerializer
-import com.google.gson.reflect.TypeToken
-import org.bukkit.Bukkit
-import org.bukkit.World
+import org.yaml.snakeyaml.Yaml
 import java.io.File
 import java.io.FileReader
 import java.io.FileWriter
-import java.lang.ref.Reference
-import java.lang.ref.WeakReference
 import java.util.*
 
 /**
@@ -19,15 +11,9 @@ import java.util.*
  * TODO: Test this feature
  */
 object ModuledPlayerDataManager {
-    private val gson = GsonBuilder().registerTypeAdapter(object: TypeToken<Reference<World>>() {}.type, JsonSerializer<Reference<World>> { obj, _, _ ->
-        val field = JsonObject()
-        field.addProperty("uid", obj.get()?.uid.toString())
-        field
-    }).registerTypeAdapter(object: TypeToken<Reference<World>>() {}.type, JsonDeserializer<Reference<World>> { element, _, _ ->
-        WeakReference(Bukkit.getWorld(UUID.fromString((element as JsonObject)["uid"].asString)))
-    }).create()
+    private val snake = Yaml()
     //                             Player UUID    |   Module Name | Module Player Data Json Tree
-    private val playerRoot: MutableMap<UUID, MutableMap<String, JsonObject>> = hashMapOf()
+    private val playerRoot: MutableMap<UUID, MutableMap<String, Any>> = hashMapOf()
 
     fun init(baseFolder: File) {
         if(!baseFolder.exists()) {
@@ -39,51 +25,44 @@ object ModuledPlayerDataManager {
         }
         dataBaseFolder.listFiles()?.forEach {
             runCatching {
-                if(it.extension == "json") {
-                    val uuid = UUID.fromString(it.nameWithoutExtension)
-                    val rootObject = gson.fromJson<JsonObject>(FileReader(it), object: TypeToken<JsonObject>() {}.type)
-                    val root = hashMapOf<String, JsonObject>()
-                    rootObject.entrySet().forEach {
-                        runCatching {
-                            root[it.key] = it.value.asJsonObject
-                        }
-                    }
-                    playerRoot[uuid] = root
+                if(it.extension == "yml") {
+                    val fileReader = FileReader(it)
+                    val rootObj = snake.loadAs(fileReader, MutableMap::class.java) // TODO: Bug fix for class not found
+                    playerRoot[UUID.fromString(it.nameWithoutExtension)] = rootObj as MutableMap<String, Any>
+                    fileReader.close()
                 }
             }.onFailure { t ->
                 t.printStackTrace()
                 val nf = File(dataBaseFolder, "${it.name}.error")
-                if(nf.exists()) {
-                    it.renameTo(File("${nf.name}.error"))
-                } else {
+                if(!nf.exists()) {
                     it.renameTo(nf)
                 }
             }
         }
     }
 
-    fun get(uuid: UUID, module: String): JsonObject? {
+    fun get(uuid: UUID, module: String): Any? {
         return playerRoot[uuid]?.get(module)
     }
 
-    fun set(uuid: UUID, module: String, obj: JsonObject) {
+    fun set(uuid: UUID, module: String, obj: Any) {
         if(uuid !in playerRoot) {
             playerRoot[uuid] = hashMapOf()
         }
         playerRoot[uuid]!![module] = obj
     }
 
-    fun <T> setTyped(uuid: UUID, module: String, obj: T) {
-        set(uuid, module, gson.toJsonTree(obj) as JsonObject)
+    fun setTyped(uuid: UUID, module: String, obj: Any) {
+        set(uuid, module, obj)
     }
 
     fun <T> getTyped(uuid: UUID, module: String): T {
-        return gson.fromJson(get(uuid, module), object: TypeToken<T>() {}.type)
+        return get(uuid, module) as T
     }
 
     fun <T> setAllTyped(module: String, map: MutableMap<UUID, T>) {
         map.forEach { (uuid, obj) ->
-            setTyped(uuid, module, obj)
+            setTyped(uuid, module, obj as Any)
         }
     }
 
@@ -91,7 +70,7 @@ object ModuledPlayerDataManager {
         val rtn = hashMapOf<UUID, T>()
         playerRoot.forEach { (k, v) ->
             runCatching {
-                rtn[k] = gson.fromJson(v[module]!!, object: TypeToken<T>() {}.type)
+                rtn[k] = v[module]!! as T
             }
         }
         return rtn
@@ -107,17 +86,13 @@ object ModuledPlayerDataManager {
         }
 
         playerRoot.forEach { (k, v) ->
-            val root = JsonObject()
-            v.forEach { (module, obj) ->
-                root.add(module, obj)
-            }
-            val file = File(dataBaseFolder, "$k.json")
+            val file = File(dataBaseFolder, "$k.yml")
             if(file.exists()) {
                 file.delete()
             }
             file.createNewFile()
             val fw = FileWriter(file, false)
-            fw.write(gson.toJson(root))
+            fw.write(snake.dump(v))
             fw.flush()
             fw.close()
         }

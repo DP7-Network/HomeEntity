@@ -21,7 +21,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
     private val unloggedInPlayers = mutableListOf<UUID>()
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if(command.name == "session" && ((sender is Player && maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
+        if(command.name == "secure" && ((sender is Player && maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
             if(sender is Player) {
                 if(sender.uniqueId in unloggedInPlayers) {
                     return true
