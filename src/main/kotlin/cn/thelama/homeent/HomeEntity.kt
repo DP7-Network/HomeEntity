@@ -7,6 +7,7 @@ import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.mylovelycat.MyLovelyCat
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
+import cn.thelama.homeent.prefix.PrefixManager
 import cn.thelama.homeent.relay.Relay
 import cn.thelama.homeent.relay.RelayBotV1
 import cn.thelama.homeent.relay.RelayBotHandler
@@ -90,7 +91,7 @@ class HomeEntity : JavaPlugin(), Listener {
         .create()).create()
 
     override fun onLoad() {
-        logger.info("Preloading classes...")
+        logger.info("预加载...")
         logger.info(LocationEntry().toString())
     }
 
@@ -103,11 +104,11 @@ class HomeEntity : JavaPlugin(), Listener {
                 COMMIT_HASH = it.getProperty("HASH")
                 BUILD_NUMBER = it.getProperty("BUILD").toInt()
                 if(it.contains("UNSTABLE")) {
-                    Bukkit.getLogger().warning("You are using a **unstable** build!")
+                    Bukkit.getLogger().warning("你正在使用**不稳定**的版本!!!")
                 }
             }
         }.onFailure {
-            Bukkit.getLogger().warning("Failed to get version info of this plugin!!")
+            Bukkit.getLogger().warning("无法获取插件版本信息!!")
             BRANCH = "Unknown"
             COMMIT_HASH = ""
         }
@@ -117,9 +118,9 @@ class HomeEntity : JavaPlugin(), Listener {
             logger.info("")
             logger.info("")
             logger.runCatching {
-                info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
+                info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
             }.onFailure {
-                logger.info("${ChatColor.GREEN}Welcome to HomeEntity $VERSION (???@???")
+                logger.info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION (???@???")
             }
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
@@ -128,7 +129,7 @@ class HomeEntity : JavaPlugin(), Listener {
             measureTimeMillis {
                 ModuledPlayerDataManager.init(dataFolder)
             }.also {
-                println("Player data loaded in ${it}ms")
+                println("加载玩家数据用时 ${it}ms")
             }
 
             if(config.getBoolean("proxy.enable")) {
@@ -145,76 +146,66 @@ class HomeEntity : JavaPlugin(), Listener {
                 this.globalNetworkProxy = Proxy.NO_PROXY
             }
 
-            logger.info("  Register commands...")
+            logger.info("注册指令即事件监听器中...")
 
             this.getCommand("warp")!!.apply {
                 setExecutor(WarpHandlerV2)
                 tabCompleter = WarpCompleter
-                logger.info("    ${ChatColor.GREEN}Command warp registered successfully")
+            }
+
+            this.getCommand("prefix")!!.apply {
+                setExecutor(PrefixManager)
             }
 
             this.getCommand("show")!!.apply {
                 setExecutor(ShowHandler)
                 tabCompleter = ShowCompleter
-                logger.info("    ${ChatColor.GREEN}Command show registered successfully")
             }
 
             this.getCommand("back")!!.apply {
                 setExecutor(BackHandler)
-                logger.info("    ${ChatColor.GREEN}Command back registered successfully")
             }
 
             this.getCommand("secure")!!.apply {
                 setExecutor(SecureHandler)
-                logger.info("    ${ChatColor.GREEN}Command session registered successfully")
             }
 
             this.getCommand("exit")!!.apply {
                 setExecutor(ExitHandler)
-                logger.info("    ${ChatColor.GREEN}Command exit registered successfully")
             }
 
             this.getCommand("slime")!!.apply {
                 setExecutor(SlimeHandler)
-                logger.info("    ${ChatColor.GREEN}Command slime registered successfully")
             }
 
             this.getCommand("tpa")!!.apply {
                 setExecutor(TPAHandler)
                 tabCompleter = TPACompleter
-                logger.info("    ${ChatColor.GREEN}Command tpa registered successfully")
             }
 
             this.getCommand("tphere")!!.apply {
                 setExecutor(TPHereHandler)
                 tabCompleter = TPACompleter
-                logger.info("    ${ChatColor.GREEN}Command tphere registered successfully")
             }
 
             this.getCommand("tpaccept")!!.apply {
                 setExecutor(TPAcceptHandler)
-                logger.info("    ${ChatColor.GREEN}Command tpaccept registered successfully")
             }
 
             this.getCommand("tpdeny")!!.apply {
                 setExecutor(TPDenyHandler)
-                logger.info("    ${ChatColor.GREEN}Command tpdeny registered successfully")
             }
 
             this.getCommand("relay")!!.apply {
                 setExecutor(RelayBotHandler)
-                logger.info("    ${ChatColor.GREEN}Command relay registered successfully")
-
             }
 
             this.getCommand("home")!!.apply {
                 setExecutor(HomeHandler)
-                logger.info("    ${ChatColor.GREEN}Command home registered successfully")
             }
 
             this.getCommand("sethome")!!.apply {
                 setExecutor(HomeHandler)
-                logger.info("    ${ChatColor.GREEN}Command sethome registered successfully")
             }
 
             val catWeight = File(dataFolder, "cat")
@@ -227,41 +218,34 @@ class HomeEntity : JavaPlugin(), Listener {
 
             this.getCommand("cat")!!.apply {
                 setExecutor(MyLovelyCat)
-                logger.info("    ${ChatColor.GREEN}Command cat registered successfully")
             }
 
             this.getCommand("feed")!!.apply {
                 setExecutor(MyLovelyCat)
-                logger.info("    ${ChatColor.GREEN}Command feed registered successfully")
             }
 
-            logger.info("  Register events...")
+            // Event Register
 
             server.pluginManager.registerEvents(this, this)
             server.pluginManager.registerEvents(PrivateHandler, this)
             server.pluginManager.registerEvents(ShowManager, this)
-
-            logger.info("  Finalizing...")
+            server.pluginManager.registerEvents(PrefixManager, this)
 
             server.onlinePlayers.forEach {
                 it.setDisplayName(
                     "${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
             }
             //launchCheckUpdatesTask()
-            logger.info("${ChatColor.RED}因为lama穷导致CI没钱续费 :( 自动更新无了")
-            logger.info("${ChatColor.GREEN}Reached goal 'initialize'")
-            logger.info("Launching Relay Bot")
-            botInstance = if(config.getBoolean("relay.v2")) {
-                logger.info("  Launching Relay bot v2")
-                RelayBotV2(config.getLong("relay.listen"), config.getString("relay.token")!!)
-            } else {
-                logger.info("  Launching Relay bot v1")
-                logger.warning("  You are using a deprecated feature!")
-                RelayBotV1(config.getLong("relay.listen"), config.getString("relay.token")!!)
-            }
-            logger.info("${ChatColor.GREEN}Reached goal 'relay'")
+            logger.warning("${ChatColor.RED}因为lama穷导致CI没钱续费 :( 自动更新无了")
+            logger.info("${ChatColor.GREEN}HomeEntity Bukkit注册完毕!")
+
+            val listen = config.getLong("relay.listen")
+            val token = config.getString("relay.token")!!
+            logger.info("启动转发机器人v2 访问密钥: ${token.substringAfter(':').substring(0..15).padEnd(25, '*')}. 机器人将监听群组: $listen ")
+            botInstance = RelayBotV2(listen, token)
+            logger.info("${ChatColor.GREEN}转发机器人启动完毕!")
         }.also {
-            logger.info("${ChatColor.GREEN}HomeEntity Initialized Complete in $it ms")
+            logger.info("${ChatColor.GREEN}HomeEntity 加载完毕! 用时 $it 毫秒")
         }
     }
 
@@ -371,7 +355,7 @@ warp:
         lastTeleport[e.entity.uniqueId] = e.entity.location
     }
 
-    private fun parseWorld(name: String?): String {
+    fun parseWorld(name: String?): String {
         if(name == null) {
             return "Void"
         }
@@ -399,7 +383,7 @@ warp:
         SecureHandler.setLoginState(e.player.uniqueId, false)
         e.joinMessage = "${ChatColor.GRAY}[${ChatColor.GREEN}+${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        e.player.sendMessage("${ChatColor.GOLD}  欢迎来到${config.getString("main.serverName")}      ")
+        e.player.sendMessage("${ChatColor.GOLD}  欢迎来到${config.getString("main.serverName")}")
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.l <密码>'       来登录")
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册")
         e.player.sendMessage("${ChatColor.RED}  若忘记密码请找在线管理员重置")
@@ -431,11 +415,6 @@ warp:
 
     @EventHandler
     fun onChat(e: AsyncPlayerChatEvent) {
-        e.format =
-            "${ChatColor.AQUA}[${ChatColor.RESET}${parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] " +
-                    "${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: " +
-                    "${ChatColor.RESET}%2\$s"
-
         Notice.parseMessage(e.message).forEach {
             it.sendTitle("${ChatColor.YELLOW}有人提到你",
                 "${ChatColor.YELLOW}${e.player.name}${ChatColor.WHITE} 在聊天消息中提到了你，快去看看",
