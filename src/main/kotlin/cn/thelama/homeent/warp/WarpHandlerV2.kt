@@ -65,16 +65,25 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
                     args.size < 2 -> {
                         sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
                     }
+
                     args.size > 4 -> {
                         runCatching {
                             if (!checkName(args[1], sender)) {
                                 return true
                             }
-                            if (args.size > 5 && args[5] == "force" || !tmpMap.containsKey(args[1])) {
+                            if (args.size >= 5 && (args.last() == "force" || args[1] !in tmpMap)) {
                                 tmpMap[args[1]] = LocationEntry(args[1], args[2].toDouble(), args[3].toDouble(), args[4].toDouble(), GameWorld.toConfigurationID(sender.world.uid), "")
+                                if(args.size > 5) {
+                                    tmpMap[args[1]]!!.description = args[6]
+                                }
                                 sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
+                            } else {
+                                if(args.size > 5) {
+                                    warn("/warp set ${args[1]} ${args[2]} ${args[3]} ${args[4]} ${args[5]} force")
+                                } else {
+                                    warn("/warp set ${args[1]} ${args[2]} ${args[3]} ${args[4]} force")
+                                }
                             }
-                            else warn("/warp set ${args[1]} ${args[2]} ${args[3]} ${args[4]} force")
                         }.onFailure {
                             if (it is NumberFormatException) {
                                 val message = it.message!!
@@ -87,11 +96,15 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
                         if(!checkName(args[1], sender)) {
                             return true
                         }
-                        if (args.size > 3 && args[2] == "force" || !tmpMap.containsKey(args[1])) {
+                        if (args.size >= 3 && (args.last() == "force" || args[1] !in tmpMap)) {
                             tmpMap[args[1]] = LocationEntry(args[1], sender.location.x, sender.location.y, sender.location.z, GameWorld.toConfigurationID(sender.world.uid),"")
+                            if(args.size > 3) {
+                                tmpMap[args[1]]!!.description = args[3]
+                            }
                             sender.sendMessage("已创建地标 ${ChatColor.GOLD}${args[1]}")
+                        } else {
+                            warn("/warp set ${args[1]} force")
                         }
-                        else warn("/warp set ${args[1]} force")
                     }
                 }
             }
@@ -324,8 +337,52 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
                     }
                 }
             }
+
             else -> {
-                sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
+                if (args.size >= 1) {
+                    val entry = warps[sender.uniqueId]!![args[0]]
+                    if (entry == null) {
+                        sender.sendMessage("${ChatColor.RED}地标 ${ChatColor.GOLD}${args[0]}${ChatColor.RED} 不存在")
+                    } else {
+                        val name = entry.name
+                        val x = floor(entry.x)
+                        val y = floor(entry.y)
+                        val z = floor(entry.z)
+                        val buttonShare =
+                            ComponentBuilder("${ChatColor.AQUA}${ChatColor.UNDERLINE}分享地标${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp share $name"))
+                                .event(TextComponent("点击将地标信息发送给所有人").hoverEvent)
+                                .create()
+                        val buttonDelete =
+                            ComponentBuilder("${ChatColor.RED}${ChatColor.UNDERLINE}删除地标${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/warp rm $name"))
+                                .event(TextComponent("${ChatColor.RED}点击删除这个地标").hoverEvent)
+                                .create()
+                        val buttonSet =
+                            ComponentBuilder("${ChatColor.GREEN}${ChatColor.UNDERLINE}设为当前位置${ChatColor.RESET}")
+                                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set $name force"))
+                                .event(TextComponent("点击输入指令").hoverEvent)
+                                .create()
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                        sender.sendMessage("${ChatColor.GOLD} 地标 ${getColoredName(entry.getWorld()!!.uid, name)}" +
+                                "${ChatColor.GOLD} 的详细信息")
+                        sender.sendMessage("${ChatColor.GOLD}  - 坐标: ${ChatColor.RESET}" +
+                                "${ChatColor.UNDERLINE}$x${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$y${ChatColor.RESET}, " +
+                                "${ChatColor.UNDERLINE}$z")
+                        sender.spigot().sendMessage(*ComponentBuilder("${ChatColor.GOLD}  - 描述: ")
+                            .append(ComponentBuilder("${ChatColor.RESET}${entry.description}")
+                                .event(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/warp set-des $name "))
+                                .event(TextComponent("点击修改").hoverEvent)
+                                .create())
+                            .create())
+                        sender.spigot().sendMessage(*ComponentBuilder(" ")
+                            .append(buttonShare).append(" ").append(buttonDelete).append(" ").append(buttonSet)
+                            .create())
+                        sender.sendMessage("${ChatColor.GOLD}=======================================")
+                    }
+                }
+                else sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
         }
         return true
