@@ -24,6 +24,7 @@ import cn.thelama.homeent.warp.WarpHandlerV2
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
@@ -242,10 +243,6 @@ class HomeEntity : JavaPlugin(), Listener {
         SecureHandler.save()
         PrefixManager.save()
 
-        GlobalScope.launch {
-            botInstance.shutdown()
-        }
-
         val catFile = File(dataFolder, "cat")
         catFile.delete()
         catFile.createNewFile()
@@ -253,6 +250,10 @@ class HomeEntity : JavaPlugin(), Listener {
             write(MyLovelyCat.weight().toString())
             flush()
             close()
+        }
+
+        runBlocking {
+            botInstance.shutdown()
         }
 
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")

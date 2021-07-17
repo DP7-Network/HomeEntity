@@ -9,7 +9,7 @@ class CatWeightChangedEvent(var increaseWeight: Double, val befor: Double, val a
         private val handlerList = HandlerList()
     }
 
-    private var isCancelled: Boolean = true
+    private var isCancelled: Boolean = false
 
     override fun getHandlers() = handlerList
 

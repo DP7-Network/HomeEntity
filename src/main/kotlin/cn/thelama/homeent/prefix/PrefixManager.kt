@@ -18,8 +18,8 @@ import org.bukkit.event.player.AsyncPlayerChatEvent
 import java.util.*
 
 object PrefixManager : CommandExecutor, ModuleCommand, Listener {
-    private val prefixes: MutableMap<UUID, String> = ModuledPlayerDataManager.getAllTyped<String>("prefix", object: TypeToken<String>() {}.type).apply {
-        this[Bukkit.getOfflinePlayer("Lapis_Apple").uniqueId] = "${ChatColor.GOLD}LSP"
+    private val prefixes: MutableMap<UUID, PrefixWrapper> = ModuledPlayerDataManager.getAllTyped<PrefixWrapper>("prefix", object: TypeToken<PrefixWrapper>() {}.type).apply {
+        this[Bukkit.getOfflinePlayer("Lapis_Apple").uniqueId] = PrefixWrapper("${ChatColor.GOLD}LSP")
     }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
@@ -34,7 +34,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
                             sender.sendMessage("${ChatColor.GREEN}删除称号成功!")
                         } else {
                             if(args[0] != "Lapis_Apple") {
-                                prefixes[Bukkit.getOfflinePlayer(args[0]).uniqueId] = args[1].replace('&', ChatColor.COLOR_CHAR)
+                                prefixes[Bukkit.getOfflinePlayer(args[0]).uniqueId] = PrefixWrapper(args[1].replace('&', ChatColor.COLOR_CHAR))
                             }
                             sender.sendMessage("${ChatColor.GREEN}更新称号成功!")
                         }
@@ -54,7 +54,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
                             sender.sendMessage("${ChatColor.GREEN}删除称号成功!")
                         } else {
                             if(sender.name != "Lapis_Apple") {
-                                prefixes[sender.uniqueId] = args[0].replace('&', ChatColor.COLOR_CHAR)
+                                prefixes[sender.uniqueId] = PrefixWrapper(args[0].replace('&', ChatColor.COLOR_CHAR))
                             }
                             sender.sendMessage("${ChatColor.GREEN}更新称号成功!")
                         }

@@ -17,10 +17,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
 
     override fun channelRead(ctx: ChannelHandlerContext?, obj: Any?) {
         if(obj is PacketPlayInChat) {
-            if(SecureHandler.getLoginState(player.uniqueId)) {
-                SecureHandler.removeLimit(player)
-                super.channelRead(ctx, obj)
-            }
             val str = obj.b()
             if(str.startsWith(".") || str.startsWith("/")) {
                 val sl = str.split(" ")
@@ -34,6 +30,7 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 SecureHandler.setLoginState(player.uniqueId, true)
+                                HomeEntity.instance.logger.info("send packet for ${player.name} total: ${packets.size}")
                                 sendCachedPackets()
                                 SecureHandler.removeLimit(player)
                             } else {
@@ -48,7 +45,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 SecureHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
-                                SecureHandler.removeLimit(player)
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
                             }
@@ -65,9 +61,20 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
         } else if(obj is PacketPlayInKeepAlive) {
             super.channelRead(ctx, obj)
         }
+
+        if(SecureHandler.getLoginState(player.uniqueId)) {
+            SecureHandler.removeLimit(player)
+            super.channelRead(ctx, obj)
+        }
     }
 
     override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
+        if(SecureHandler.getLoginState(player.uniqueId)) {
+            SecureHandler.removeLimit(player)
+            super.write(ctx, msg, promise)
+            return
+        }
+
         if(msg is PacketPlayOutKeepAlive || msg is PacketPlayOutChat) {
             super.write(ctx, msg, promise)
         } else if(msg is Packet<*>) {
@@ -78,7 +85,12 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
     private fun sendCachedPackets() {
         val con = player.handle.b
         packets.forEach {
-            con.sendPacket(it)
+            println(it::class.java.name)
         }
+        packets.forEach {
+            HomeEntity.instance.logger.info("send packet to${player.name} name: ${it::class.java.simpleName}")
+            con.a.k.writeAndFlush(it)
+        }
+        SecureHandler.removeLimit(player)
     }
 }

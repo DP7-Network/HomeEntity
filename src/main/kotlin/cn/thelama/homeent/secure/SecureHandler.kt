@@ -111,6 +111,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
     }
 
     fun removeLimit(p: Player) {
+        println(StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).callerClass.simpleName)
         val nmsPlayer = (p as CraftPlayer).handle
         val channel = nmsPlayer.b.a.k
         channel.eventLoop().submit {

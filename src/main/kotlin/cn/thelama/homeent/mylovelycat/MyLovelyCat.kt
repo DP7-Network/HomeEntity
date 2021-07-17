@@ -20,15 +20,15 @@ object MyLovelyCat : CommandExecutor {
             "cat" -> {
                 if(sender.name == "Lama3L9R" && "reset" in args) {
                     reset(Math.random() * 10 + 7)
-                    Bukkit.broadcastMessage("${ChatColor.GOLD}猫猫的主人将猫猫重置啦! 现在猫猫的重量${weight}kg")
-                    HomeEntity.instance.botInstance.say("${ChatColor.GOLD}猫猫的主人将猫猫重置啦! 现在猫猫的重量${weight}kg")
+                    Bukkit.broadcastMessage("${ChatColor.GOLD}猫猫的主人将猫猫重置啦! 现在猫猫的重量${String.format("%.2f", weight)}kg")
+                    HomeEntity.instance.botInstance.say("${ChatColor.GOLD}猫猫的主人将猫猫重置啦! 现在猫猫的重量${String.format("%.2f", weight)}kg")
                 } else {
-                    sender.sendMessage("${ChatColor.GOLD}当前猫猫的重量: ${weight}kg")
+                    sender.sendMessage("${ChatColor.GOLD}当前猫猫的重量: ${String.format("%.2f", weight)}kg")
                 }
             }
 
             "feed" -> {
-                val add = Random.nextDouble(-10.0, 10.0)
+                val add = Random.nextDouble(-9.0, 9.0)
                 when(feed(add)) {
                     FeedResult.INCREASE -> {
                         Bukkit.broadcastMessage("${ChatColor.GREEN}好耶! 猫猫被${sender.name}又喂胖了${ChatColor.GOLD}${String.format("%.2f", add)}${ChatColor.GREEN}kg, 现在猫猫有: ${ChatColor.GOLD}${String.format("%.2f", weight)}${ChatColor.GREEN}kg")
@@ -41,8 +41,8 @@ object MyLovelyCat : CommandExecutor {
                     }
 
                     FeedResult.DEATH -> {
-                        Bukkit.broadcastMessage("${ChatColor.RED}坏!!! ${ChatColor.STRIKETHROUGH}${sender.name}吧猫猫杀死了!")
-                        HomeEntity.instance.botInstance.say("坏!!! **${sender.name}**吧猫猫杀死了!")
+                        Bukkit.broadcastMessage("${ChatColor.RED}坏!!! ${ChatColor.STRIKETHROUGH}${sender.name}把猫猫杀死了!")
+                        HomeEntity.instance.botInstance.say("坏!!! **${sender.name}**把猫猫杀死了!")
                     }
                 }
             }
@@ -55,12 +55,11 @@ object MyLovelyCat : CommandExecutor {
             val event = CatWeightChangedEvent(weight, this.weight - weight, this.weight + weight)
             Bukkit.getServer().pluginManager.callEvent(event)
             if(event.isCancelled) {
-                this.weight -= weight
-            } else {
-                this.weight += event.increaseWeight
+                return FeedResult.NOTHING_CHANGED
             }
 
-            return if(weight < 0) {
+            this.weight += event.increaseWeight
+            return if(this.weight < 0) {
                 val deathEvent = CatDeathEvent(event.increaseWeight, this.weight - event.increaseWeight, this.weight, Math.random() * 10 + 7)
                 Bukkit.getServer().pluginManager.callEvent(event)
                 this.weight = deathEvent.next
