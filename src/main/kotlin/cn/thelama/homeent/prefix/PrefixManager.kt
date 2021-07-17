@@ -91,5 +91,5 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
         }
     }
 
-
+    data class PrefixWrapper(@field:JvmField val prefix: String)
 }
