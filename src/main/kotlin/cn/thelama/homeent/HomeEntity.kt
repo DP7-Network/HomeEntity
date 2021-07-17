@@ -9,7 +9,6 @@ import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
 import cn.thelama.homeent.prefix.PrefixManager
 import cn.thelama.homeent.relay.Relay
-import cn.thelama.homeent.relay.RelayBotV1
 import cn.thelama.homeent.relay.RelayBotHandler
 import cn.thelama.homeent.relay.RelayBotV2
 import cn.thelama.homeent.secure.SecureHandler
@@ -22,24 +21,18 @@ import cn.thelama.homeent.warp.HomeHandler
 import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
-import com.google.gson.Gson
-import com.google.gson.JsonElement
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
-import net.minecraft.server.MinecraftServer
 import net.minecraft.server.dedicated.DedicatedServer
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.bukkit.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
@@ -55,17 +48,14 @@ import java.io.FileWriter
 import java.lang.reflect.Field
 import java.net.InetSocketAddress
 import java.net.Proxy
-import java.net.URL
 import java.security.MessageDigest
 import java.util.*
 import kotlin.system.measureTimeMillis
-import pw.yumc.Yum.api.YumAPI
 import java.io.FileReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
         const val VERSION = "1.6 Pre-Release"
-        const val JENKINS_BASE = "https://ci.thelama.cn"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
@@ -77,12 +67,9 @@ class HomeEntity : JavaPlugin(), Listener {
             dedicatedServerField.get(server) as DedicatedServer
         }
     }
-    private val gson = Gson()
-
     lateinit var botInstance: Relay
     lateinit var minecraftTranslation: HashMap<String, String>
     lateinit var globalNetworkProxy: Proxy
-    lateinit var httpClient: OkHttpClient
     val lastTeleport: HashMap<UUID, Location> = HashMap()
     val commandHelp: Array<BaseComponent> = ComponentBuilder("${ChatColor.GOLD}指令参数错误! ")
         .append(ComponentBuilder(
@@ -133,10 +120,10 @@ class HomeEntity : JavaPlugin(), Listener {
             }
 
             if(config.getBoolean("proxy.enable")) {
-                if(config.getString("proxy.type")?.toLowerCase() == "http") {
+                if(config.getString("proxy.type")?.lowercase() == "http") {
                     this.globalNetworkProxy = Proxy(Proxy.Type.HTTP,
                         InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
-                } else if (config.getString("proxy.type")?.toLowerCase() == "socks") {
+                } else if (config.getString("proxy.type")?.lowercase() == "socks") {
                     this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS,
                         InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
                 } else {
@@ -269,15 +256,6 @@ class HomeEntity : JavaPlugin(), Listener {
         }
 
         logger.info("${ChatColor.RED}Reached goal 'shutdown'")
-    }
-
-    private fun writeFile(file: File, data: String) {
-        file.delete()
-        file.createNewFile()
-        val fw = FileWriter(file)
-        fw.write(data)
-        fw.flush()
-        fw.close()
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -451,22 +429,6 @@ warp:
     }
 
     private fun tryUpdate(stream: String, sync: Boolean = false) {
-        val req = Request.Builder().url("$JENKINS_BASE/job/$stream/lastSuccessfulBuild/api/json").get().build()
-        val rep = httpClient.newCall(req).execute().body?.string()
-        if(rep == null) {
-            return
-        } else {
-            val jsonTree = gson.fromJson(rep, JsonElement::class.java).asJsonObject
-            if(jsonTree["number"].asInt > BUILD_NUMBER || sync) {
-                Bukkit.broadcastMessage("${ChatColor.GREEN}HomeEntity: 可用更新已找到, 准备更新!")
-                FileUtils.copyToFile(
-                    URL("http://s1.lama3l9r.net/job/$stream" +
-                            "/lastSuccessfulBuild/artifact/build/libs/HomeEntity-1.0-SNAPSHOT-all.jar")
-                    .openConnection(
-                    this.globalNetworkProxy).getInputStream(), File(Bukkit.getUpdateFolderFile(), this.file.name))
-                Bukkit.broadcastMessage("更新已下载完毕！准备重载")
-                YumAPI.reload(this)
-            }
-        }
+        // WIP
     }
 }

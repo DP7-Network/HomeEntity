@@ -19,9 +19,8 @@ dependencies {
     val serverJarPath = files("./dependency/spigot-1.17.1.jar")
 
     implementation(kotlin("stdlib"))
-    implementation("com.github.pengrad:java-telegram-bot-api:5.1.0")
     implementation("dev.inmo:tgbotapi:$tgBotApiVersion")
-    implementation(serverJarPath)
+    compileOnly(serverJarPath)
     compileOnly(files("./dependency/Yum.jar"))
 }
 
@@ -29,7 +28,7 @@ tasks {
     withType<ShadowJar> {
         exclude("com.comphenix.protocol:ProtocolLib:4.5.0")
         exclude {
-            false//it?.file?.name == "spigot-1.17.jar" || it?.file?.name == "Yum.jar"
+            it?.file?.name == "spigot-1.17.jar" || it?.file?.name == "Yum.jar"
         }
     }
 
