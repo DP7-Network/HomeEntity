@@ -45,7 +45,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
                             return true
                         }
 
-                        if(args[1] == "\$null") {
+                        if(args[0] == "\$null") {
                             if(sender.name != "Lapis_Apple") {
                                 prefixes -= sender.uniqueId
                             }

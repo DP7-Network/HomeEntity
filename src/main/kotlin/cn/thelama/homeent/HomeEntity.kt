@@ -240,6 +240,7 @@ class HomeEntity : JavaPlugin(), Listener {
     override fun onDisable() {
         WarpHandlerV2.save()
         SecureHandler.save()
+        PrefixManager.save()
 
         GlobalScope.launch {
             botInstance.shutdown()
