@@ -4,6 +4,7 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.secure.SecureHandler
+import com.google.gson.reflect.TypeToken
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
@@ -17,7 +18,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent
 import java.util.*
 
 object PrefixManager : CommandExecutor, ModuleCommand, Listener {
-    private val prefixes: MutableMap<UUID, String> = ModuledPlayerDataManager.getAllTyped<String>("prefix").apply {
+    private val prefixes: MutableMap<UUID, String> = ModuledPlayerDataManager.getAllTyped<String>("prefix", object: TypeToken<String>() {}.type).apply {
         this[Bukkit.getOfflinePlayer("Lapis_Apple").uniqueId] = "${ChatColor.GOLD}LSP"
     }
 
