@@ -64,17 +64,16 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 
 - 核心功能
   - 加急
-	+ [ ] 切换到免费的CI并恢复自动更新
-  + [ ] 翻新warp功能, 适配群投票中决定的更新内容 
-  + [x] TPA
+	+ [ ] `WIP` 切换到免费的CI并恢复自动更新 -> pr:gh-actions-test to master
+	+ [ ] 指令帮助
+  + [x] 翻新warp功能, 适配群投票中决定的更新内容
+  + [x] TPA成本
   + [ ] 全部可配置化
   + [ ] 更改版本检查方法到 git commit
-  + [ ] WIP 外置第三方登录 -> [HomeEntity-Yggdrasil](https://github.com/DP7-Network/HomeEntity-Yggdrasil)
+  + [ ] `WIP` 外置第三方登录 -> [HomeEntity-Yggdrasil](https://github.com/DP7-Network/HomeEntity-Yggdrasil)
 - RelayBot
   + [x] 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI
   + [ ] TG玩家绑定
-  + [ ] TG执行指令
-  + [ ] TG访问后台
 
 ## 贡献代码
 
