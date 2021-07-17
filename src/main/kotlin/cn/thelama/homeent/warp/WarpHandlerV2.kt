@@ -4,6 +4,8 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
+import com.google.gson.internal.LinkedTreeMap
+import com.google.gson.reflect.TypeToken
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
@@ -22,13 +24,10 @@ import kotlin.collections.LinkedHashMap
 import kotlin.math.ceil
 import kotlin.math.floor
 
-object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<LinkedHashMap<String, LocationEntry>?> {
-    private var warps: MutableMap<UUID, LinkedHashMap<String, LocationEntry>>
+object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<LinkedTreeMap<String, LocationEntry>?> {
+    private val warps: MutableMap<UUID, LinkedTreeMap<String, LocationEntry>> = ModuledPlayerDataManager.getAllTyped("warp", object: TypeToken<LinkedTreeMap<String, LocationEntry>>() {}.type)
     val ops = listOf("set", "rm", "list", "detail", "set-des", "share", "find")
 
-    init {
-        warps = ModuledPlayerDataManager.getAllTyped("warp")
-    }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender !is Player) {
@@ -41,7 +40,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
             return true
         }
         if(sender.uniqueId !in warps) {
-            warps[sender.uniqueId] = LinkedHashMap()
+            warps[sender.uniqueId] = LinkedTreeMap()
         }
 
         when(args[0]) {
@@ -140,13 +139,6 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
                     /* 第一部分: 遍历地标并逐行显示 */
                     val lastIndex = currentPage * num - 1
                     val firstIndex = lastIndex - num + 1
-                    //已确认需要修改数据结构，MutableMap是无序的, 可能每次遍历的顺序都不同(目前改为 `LinkedHashMap` ).
-                    //同时原数据结构遍历时无法获取地标名称, 故无法直接根据点击的操作执行相应地标的指令, 因此在
-                    //LocationEntry 中添加了 name:String 属性, 以方便直接获取地标名称;
-                    //但这样导致存储时数据多余(会存储两个 name 属性), 因此存储时改为直接存储一个 `List<LocationEntry>` ,
-                    //加载时将该列表重新处理为 LinkedHashMap 从而做到不影响其他功能.
-                    //(这种数据结构相较于之前, 多了warp点数量的引用和玩家数量的 HashMap 对象, 其余不变,
-                    //故几乎不会占用更多内存, 只是加载和保存时处理时间会增加.)
                     tmpWarps.values.forEachIndexed { index, entry ->
                         if (index > lastIndex) return@forEachIndexed
                         if (index >= firstIndex) {
@@ -403,5 +395,5 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
         ModuledPlayerDataManager.setAllTyped("warp", warps)
     }
 
-    override fun config(uuid: UUID): LinkedHashMap<String, LocationEntry>? = warps[uuid]
+    override fun config(uuid: UUID): LinkedTreeMap<String, LocationEntry>? = warps[uuid]
 }

@@ -114,16 +114,16 @@ class HomeEntity : JavaPlugin(), Listener {
             }
 
             measureTimeMillis {
-                ModuledPlayerDataManager.init(dataFolder)
+                ModuledPlayerDataManager.init(this.config)
             }.also {
                 println("加载玩家数据用时 ${it}ms")
             }
 
             if(config.getBoolean("proxy.enable")) {
-                if(config.getString("proxy.type")?.lowercase() == "http") {
+                if(config.getString("proxy.type")?.toLowerCase() == "http") {
                     this.globalNetworkProxy = Proxy(Proxy.Type.HTTP,
                         InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
-                } else if (config.getString("proxy.type")?.lowercase() == "socks") {
+                } else if (config.getString("proxy.type")?.toLowerCase() == "socks") {
                     this.globalNetworkProxy = Proxy(Proxy.Type.SOCKS,
                         InetSocketAddress(config.getString("proxy.ip"), config.getInt("proxy.port")))
                 } else {
@@ -228,7 +228,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
             val listen = config.getLong("relay.listen")
             val token = config.getString("relay.token")!!
-            logger.info("启动转发机器人v2 访问密钥: ${token.substringAfter(':').substring(0..15).padEnd(25, '*')}. 机器人将监听群组: $listen ")
+            logger.info("启动转发机器人v2 访问密钥: ${token.substringAfter(':').substring(0..10).padEnd(35, '*')}. 机器人将监听群组: $listen ")
             botInstance = RelayBotV2(listen, token)
             logger.info("${ChatColor.GREEN}转发机器人启动完毕!")
         }.also {
@@ -241,7 +241,6 @@ class HomeEntity : JavaPlugin(), Listener {
         WarpHandlerV2.save()
         SecureHandler.save()
 
-        ModuledPlayerDataManager.save(this.dataFolder)
         GlobalScope.launch {
             botInstance.shutdown()
         }

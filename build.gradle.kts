@@ -20,6 +20,7 @@ dependencies {
 
     implementation(kotlin("stdlib"))
     implementation("dev.inmo:tgbotapi:$tgBotApiVersion")
+    implementation("org.mongodb:mongodb-driver-sync:4.3.0")
     compileOnly(serverJarPath)
     compileOnly(files("./dependency/Yum.jar"))
 }

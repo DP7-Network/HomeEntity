@@ -33,7 +33,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
                             sender.sendMessage("${ChatColor.GREEN}删除称号成功!")
                         } else {
                             if(args[0] != "Lapis_Apple") {
-                                prefixes[Bukkit.getOfflinePlayer(args[0]).uniqueId] = args[1]
+                                prefixes[Bukkit.getOfflinePlayer(args[0]).uniqueId] = args[1].replace('&', ChatColor.COLOR_CHAR)
                             }
                             sender.sendMessage("${ChatColor.GREEN}更新称号成功!")
                         }
@@ -53,7 +53,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
                             sender.sendMessage("${ChatColor.GREEN}删除称号成功!")
                         } else {
                             if(sender.name != "Lapis_Apple") {
-                                prefixes[sender.uniqueId] = args[0]
+                                prefixes[sender.uniqueId] = args[0].replace('&', ChatColor.COLOR_CHAR)
                             }
                             sender.sendMessage("${ChatColor.GREEN}更新称号成功!")
                         }
@@ -71,6 +71,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
     }
 
     override fun save() {
+        ModuledPlayerDataManager.setAllTyped("prefix", prefixes)
     }
 
     @EventHandler
@@ -83,7 +84,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
         } else {
             e.format =
                 "${ChatColor.AQUA}[${ChatColor.RESET}${HomeEntity.instance.parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] " +
-                        "${ChatColor.RESET}${prefixes[e.player.uniqueId]}${ChatColor.RESET} "
+                        "${ChatColor.RESET}${prefixes[e.player.uniqueId]}${ChatColor.RESET} " +
                         "${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: " +
                         "${ChatColor.RESET}%2\$s"
         }

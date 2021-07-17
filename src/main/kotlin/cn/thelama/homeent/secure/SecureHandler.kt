@@ -4,6 +4,7 @@ import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
+import com.google.gson.reflect.TypeToken
 import net.minecraft.network.protocol.game.PacketPlayOutExplosion
 import net.minecraft.world.phys.Vec3D
 import org.bukkit.Bukkit
@@ -17,7 +18,7 @@ import org.bukkit.entity.Player
 import java.util.*
 
 object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerSecureEntry?> {
-    private val config: MutableMap<UUID, PlayerSecureEntry> = ModuledPlayerDataManager.getAllTyped("secure")
+    private val config: MutableMap<UUID, PlayerSecureEntry> = ModuledPlayerDataManager.getAllTyped("secure", object: TypeToken<PlayerSecureEntry>() {}.type)
     private val unloggedInPlayers = mutableListOf<UUID>()
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
