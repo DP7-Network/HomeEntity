@@ -101,9 +101,6 @@ class HomeEntity : JavaPlugin(), Listener {
         }
 
         measureTimeMillis {
-            logger.info("")
-            logger.info("")
-            logger.info("")
             logger.runCatching {
                 info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
             }.onFailure {
@@ -276,32 +273,7 @@ class HomeEntity : JavaPlugin(), Listener {
                         }
 
                         "sync" -> {
-                            if(args.size >= 2) {
-                                tryUpdate(args[1], true)
-                            } else {
-                                sender.sendMessage("/hent sync <UpdateStream(HomeEntity|HomeEntity-Devel)>")
-                            }
-                        }
-
-                        "debug" -> {
-                            Thread {
-                                val yaml = Yaml()
-                                val data = """
-warp:
-  a: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: a, world: 0,
-    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
-  b: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: b, world: 0,
-    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
-  c: !!cn.thelama.homeent.warp.LocationEntry {description: '', name: c, world: 0,
-    x: -108.3308556722686, y: 72.0, z: 34.62935224418467}
-    """
-
-                                val d = yaml.loadAs(data, MutableMap::class.java)
-                                println(d)
-                                println(d::class.java)
-
-                                Class.forName(LocationEntry::class.java.name, true, Thread.currentThread().contextClassLoader)
-                            }.run()
+                            //TODO 迁移到Github Actions
                         }
                     }
                 }

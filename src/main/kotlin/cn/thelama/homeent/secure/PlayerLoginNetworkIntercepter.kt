@@ -18,7 +18,7 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
     override fun channelRead(ctx: ChannelHandlerContext?, obj: Any?) {
         if(obj is PacketPlayInChat) {
             val str = obj.b()
-            if(str.startsWith(".") || str.startsWith("/")) {
+            if(str.startsWith(".")) {
                 val sl = str.split(" ")
                 if(sl.size >= 2) {
                     if(sl[1].length < 4 || sl[1].length > 21) {
@@ -30,7 +30,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 AuthHandler.setLoginState(player.uniqueId, true)
-                                HomeEntity.instance.logger.info("send packet for ${player.name} total: ${packets.size}")
                                 sendCachedPackets()
                                 AuthHandler.removeLimit(player)
                             } else {
@@ -40,9 +39,19 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                         }
 
                         ".r", ".reg", ".register" -> {
+                            if(sl.size < 2) {
+                                player.sendMessage("${ChatColor.RED}格式错误! .r <密码> <重复密码>")
+                                return
+                            }
+
+                            if(sl[1] != sl[2]) {
+                                player.sendMessage("${ChatColor.RED}重复密码不正确!")
+                                return
+                            }
+
                             if(AuthHandler.register(player.uniqueId, sl[1])) {
-                                player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到.DP7 996 Days")
-                                player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
+                                player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到 ${HomeEntity.instance.config.getString("main.serverName")}")
+                                player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/DP7-Network/HomeEntity")
                                 AuthHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
                             } else {
@@ -50,11 +59,19 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                             }
                             return
                         }
+
+                        else -> {
+                            player.sendMessage("${ChatColor.RED}参数不正确")
+                            player.sendMessage("${ChatColor.GREEN}正确的登录方法：'.l <密码>'")
+                            player.sendMessage("${ChatColor.GREEN}正确的注册方法：'.r <密码> <重复密码>'")
+                            player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}指令无需 '/' 请直接发送 '.r' / '.l' 到聊天区")
+                        }
                     }
                 } else {
                     player.sendMessage("${ChatColor.RED}参数不正确")
                     player.sendMessage("${ChatColor.GREEN}正确的登录方法：'.l <密码>'")
-                    player.sendMessage("${ChatColor.GREEN}正确使用方法：'.r <密码>'")
+                    player.sendMessage("${ChatColor.GREEN}正确的注册方法：'.r <密码> <重复密码>'")
+                    player.sendMessage("${ChatColor.GOLD}${ChatColor.BOLD}指令无需 '/' 请直接发送 '.r' / '.l' 到聊天区")
                 }
             }
             player.sendMessage("${ChatColor.RED}请先登录!")
@@ -70,7 +87,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
 
     override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
         if(AuthHandler.getLoginState(player.uniqueId)) {
-            AuthHandler.removeLimit(player)
             super.write(ctx, msg, promise)
             return
         }
@@ -83,13 +99,9 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
     }
 
     private fun sendCachedPackets() {
-        val con = player.handle.b
         packets.forEach {
-            println(it::class.java.name)
-        }
-        packets.forEach {
-            HomeEntity.instance.logger.info("send packet to${player.name} name: ${it::class.java.simpleName}")
-            con.a.k.writeAndFlush(it)
+         // craftPlayer.nmsEntityPlayer.playerConnection.networkManager.channel
+            player.handle.b.a.k.writeAndFlush(it)
         }
         AuthHandler.removeLimit(player)
     }
