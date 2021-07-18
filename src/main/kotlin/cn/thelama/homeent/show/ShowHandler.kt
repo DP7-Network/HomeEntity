@@ -1,7 +1,7 @@
 package cn.thelama.homeent.show
 
 import cn.thelama.homeent.HomeEntity
-import cn.thelama.homeent.secure.SecureHandler
+import cn.thelama.homeent.secure.AuthHandler
 import net.md_5.bungee.api.chat.ClickEvent
 import net.md_5.bungee.api.chat.ComponentBuilder
 import org.bukkit.Bukkit
@@ -18,7 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta
 object ShowHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(sender is Player) {
-            if(!SecureHandler.getLoginState(sender.uniqueId)) {
+            if(!AuthHandler.getLoginState(sender.uniqueId)) {
                 return true
             }
             if(args.isNotEmpty()) {

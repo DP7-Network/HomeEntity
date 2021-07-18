@@ -3,7 +3,7 @@ package cn.thelama.homeent.prefix
 import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.module.ModuleCommand
 import cn.thelama.homeent.module.ModuledPlayerDataManager
-import cn.thelama.homeent.secure.SecureHandler
+import cn.thelama.homeent.secure.AuthHandler
 import com.google.gson.reflect.TypeToken
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
@@ -23,7 +23,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
     }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if((sender is Player && SecureHandler.maintainer(sender.uniqueId)) || sender is ConsoleCommandSender) {
+        if((sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender is ConsoleCommandSender) {
             if(args.isNotEmpty()) {
                 when(args.size) {
                     2 -> {

@@ -26,13 +26,13 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                     }
                     when(sl[0].toLowerCase()) {
                         ".l", ".i", ".login" -> {
-                            if(SecureHandler.checkCredentials(player.uniqueId, sl[1])) {
+                            if(AuthHandler.checkCredentials(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
-                                SecureHandler.setLoginState(player.uniqueId, true)
+                                AuthHandler.setLoginState(player.uniqueId, true)
                                 HomeEntity.instance.logger.info("send packet for ${player.name} total: ${packets.size}")
                                 sendCachedPackets()
-                                SecureHandler.removeLimit(player)
+                                AuthHandler.removeLimit(player)
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
                             }
@@ -40,10 +40,10 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                         }
 
                         ".r", ".reg", ".register" -> {
-                            if(SecureHandler.register(player.uniqueId, sl[1])) {
+                            if(AuthHandler.register(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到.DP7 996 Days")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
-                                SecureHandler.setLoginState(player.uniqueId, true)
+                                AuthHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
@@ -62,15 +62,15 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
             super.channelRead(ctx, obj)
         }
 
-        if(SecureHandler.getLoginState(player.uniqueId)) {
-            SecureHandler.removeLimit(player)
+        if(AuthHandler.getLoginState(player.uniqueId)) {
+            AuthHandler.removeLimit(player)
             super.channelRead(ctx, obj)
         }
     }
 
     override fun write(ctx: ChannelHandlerContext?, msg: Any?, promise: ChannelPromise?) {
-        if(SecureHandler.getLoginState(player.uniqueId)) {
-            SecureHandler.removeLimit(player)
+        if(AuthHandler.getLoginState(player.uniqueId)) {
+            AuthHandler.removeLimit(player)
             super.write(ctx, msg, promise)
             return
         }
@@ -91,6 +91,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
             HomeEntity.instance.logger.info("send packet to${player.name} name: ${it::class.java.simpleName}")
             con.a.k.writeAndFlush(it)
         }
-        SecureHandler.removeLimit(player)
+        AuthHandler.removeLimit(player)
     }
 }

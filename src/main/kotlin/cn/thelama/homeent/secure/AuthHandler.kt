@@ -17,17 +17,12 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 import org.bukkit.entity.Player
 import java.util.*
 
-object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerSecureEntry?> {
-    private val config: MutableMap<UUID, PlayerSecureEntry> = ModuledPlayerDataManager.getAllTyped("secure", object: TypeToken<PlayerSecureEntry>() {}.type)
+object AuthHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerPermissionEntry?> {
+    private val config: MutableMap<UUID, PlayerPermissionEntry> = ModuledPlayerDataManager.getAllTyped("secure", object: TypeToken<PlayerPermissionEntry>() {}.type)
     private val unloggedInPlayers = mutableListOf<UUID>()
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if(command.name == "secure" && ((sender is Player && maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
-            if(sender is Player) {
-                if(sender.uniqueId in unloggedInPlayers) {
-                    return true
-                }
-            }
+        if(command.name == "auth" && ((sender is Player && maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
             if(args.size >= 2) {
                 when(args[0]) {
                     "login" -> {
@@ -55,17 +50,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
                         }
                     }
 
-                    "maintainer" -> {
-                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' 已被 '${sender.name}' 添加到维护者中 ** ")
-                        config(Bukkit.getOfflinePlayer(args[1]).uniqueId)?.permissionLevel = 1
-                        sender.sendMessage("${ChatColor.GREEN}添加成功")
-                    }
 
-                    "revoke" -> {
-                        Bukkit.getServer().logger.warning("${ChatColor.RED}${ChatColor.STRIKETHROUGH} ** '${args[1]}' 已被 '${sender.name}' 从维护者中删除 ** ")
-                        config(Bukkit.getOfflinePlayer(args[1]).uniqueId)?.permissionLevel = 0
-                        sender.sendMessage("${ChatColor.GREEN}移除成功")
-                    }
 
                     "limit" -> {
                         val p = Bukkit.getPlayer(args[1])
@@ -85,19 +70,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
                         }
                     }
 
-                    "crash" -> {
-                        (Bukkit.getPlayer(args[1]) as CraftPlayer?)?.handle?.b?.sendPacket(
-                            PacketPlayOutExplosion(
-                            Double.MAX_VALUE,
-                            Double.MAX_VALUE,
-                            Double.MAX_VALUE,
-                            Float.MAX_VALUE,
-                            mutableListOf(),
-                            Vec3D(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE)
-                            )
-                        )
-                        Bukkit.broadcastMessage("${ChatColor.RED}${args[1]} R.I.P.")
-                    }
+
 
                      else -> {
                          sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
@@ -127,7 +100,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
         ModuledPlayerDataManager.setAllTyped("secure", config)
     }
 
-    override fun config(uuid: UUID): PlayerSecureEntry? = config[uuid]
+    override fun config(uuid: UUID): PlayerPermissionEntry? = config[uuid]
 
     fun maintainer(uuid: UUID): Boolean = config(uuid)?.permissionLevel ?: 0 > 0
 
@@ -138,7 +111,7 @@ object SecureHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<Player
             return false
         }
 
-        config[uuid] = PlayerSecureEntry(HomeEntity.instance.sha256(pwd))
+        config[uuid] = PlayerPermissionEntry(HomeEntity.instance.sha256(pwd))
         return true
     }
 

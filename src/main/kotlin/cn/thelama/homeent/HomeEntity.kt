@@ -11,7 +11,8 @@ import cn.thelama.homeent.prefix.PrefixManager
 import cn.thelama.homeent.relay.Relay
 import cn.thelama.homeent.relay.RelayBotHandler
 import cn.thelama.homeent.relay.RelayBotV2
-import cn.thelama.homeent.secure.SecureHandler
+import cn.thelama.homeent.secure.AdminHandler
+import cn.thelama.homeent.secure.AuthHandler
 import cn.thelama.homeent.show.ShowCompleter
 import cn.thelama.homeent.show.ShowHandler
 import cn.thelama.homeent.show.ShowManager
@@ -22,8 +23,6 @@ import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.md_5.bungee.api.chat.BaseComponent
 import net.md_5.bungee.api.chat.ClickEvent
@@ -154,8 +153,12 @@ class HomeEntity : JavaPlugin(), Listener {
                 setExecutor(BackHandler)
             }
 
-            this.getCommand("secure")!!.apply {
-                setExecutor(SecureHandler)
+            this.getCommand("auth")!!.apply {
+                setExecutor(AuthHandler)
+            }
+
+            this.getCommand("admin")!!.apply {
+                setExecutor(AdminHandler)
             }
 
             this.getCommand("exit")!!.apply {
@@ -240,7 +243,7 @@ class HomeEntity : JavaPlugin(), Listener {
     @OptIn(DelicateCoroutinesApi::class)
     override fun onDisable() {
         WarpHandlerV2.save()
-        SecureHandler.save()
+        AuthHandler.save()
         PrefixManager.save()
 
         val catFile = File(dataFolder, "cat")
@@ -359,7 +362,7 @@ warp:
 
     @EventHandler
     fun onPlayerJoin(e: PlayerJoinEvent) {
-        SecureHandler.setLoginState(e.player.uniqueId, false)
+        AuthHandler.setLoginState(e.player.uniqueId, false)
         e.joinMessage = "${ChatColor.GRAY}[${ChatColor.GREEN}+${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         e.player.sendMessage("${ChatColor.GRAY}============================")
         e.player.sendMessage("${ChatColor.GOLD}  欢迎来到${config.getString("main.serverName")}")
@@ -367,17 +370,17 @@ warp:
         e.player.sendMessage("${ChatColor.AQUA}  请发送'.r <密码> <密码>' 来注册")
         e.player.sendMessage("${ChatColor.RED}  若忘记密码请找在线管理员重置")
         e.player.sendMessage("${ChatColor.GRAY}============================")
-        SecureHandler.limit(e.player)
+        AuthHandler.limit(e.player)
         e.player.setDisplayName(
             "${ChatColor.AQUA}[${ChatColor.RESET}未登录${ChatColor.AQUA}] ${e.player.name}")
 
         Bukkit.getScheduler().runTaskLater(this, Runnable {
-            if(SecureHandler.getLoginState(e.player.uniqueId)) {
-                SecureHandler.removeLimit(e.player)
+            if(AuthHandler.getLoginState(e.player.uniqueId)) {
+                AuthHandler.removeLimit(e.player)
                 e.player.setDisplayName(
                         "${ChatColor.AQUA}[${parseWorld(e.player.world.name)}${ChatColor.AQUA}] ${e.player.name}")
             } else {
-                SecureHandler.setLoginState(e.player.uniqueId, false)
+                AuthHandler.setLoginState(e.player.uniqueId, false)
                 e.player.kickPlayer("${ChatColor.RED}登录验证超时")
             }
         }, 30 * 20)
@@ -387,7 +390,7 @@ warp:
 
     @EventHandler
     fun onPlayerDamage(e: EntityDamageByEntityEvent) {
-        if(e.entity is Player && SecureHandler.getLoginState(e.entity.uniqueId)) {
+        if(e.entity is Player && AuthHandler.getLoginState(e.entity.uniqueId)) {
             e.isCancelled = true
         }
     }
