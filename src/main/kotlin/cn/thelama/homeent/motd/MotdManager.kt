@@ -84,9 +84,7 @@ object MotdManager : Listener, CommandExecutor {
             motd.createNewFile()
         }
         val fw = FileWriter(motd)
-        lines.forEach {
-            fw.write("\n" + it)
-        }
+        fw.write(lines.joinToString(separator = "\n"))
         fw.flush()
         fw.close()
     }

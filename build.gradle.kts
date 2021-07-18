@@ -1,4 +1,5 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     java
@@ -15,7 +16,7 @@ repositories {
 }
 
 dependencies {
-    val tgBotApiVersion = "0.35.1"
+    val tgBotApiVersion = "0.35.2"
     val serverJarPath = files("./dependency/spigot-1.17.1.jar")
 
     implementation(kotlin("stdlib"))
@@ -29,11 +30,11 @@ tasks {
     withType<ShadowJar> {
         exclude("com.comphenix.protocol:ProtocolLib:4.5.0")
         exclude {
-            it?.file?.name == "spigot-1.17.jar" || it?.file?.name == "Yum.jar"
+            it?.file?.name == "spigot-1.17.1.jar" || it?.file?.name == "Yum.jar"
         }
     }
 
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = "1.8"
             freeCompilerArgs = listOf("-Xopt-in=kotlin.RequiresOptIn")
