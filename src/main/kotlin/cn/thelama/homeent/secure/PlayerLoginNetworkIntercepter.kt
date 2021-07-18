@@ -31,7 +31,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
                                 AuthHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
-                                AuthHandler.removeLimit(player)
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
                             }

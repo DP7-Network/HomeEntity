@@ -4,6 +4,7 @@ package cn.thelama.homeent
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.module.ModuledPlayerDataManager
+import cn.thelama.homeent.motd.MotdManager
 import cn.thelama.homeent.mylovelycat.MyLovelyCat
 import cn.thelama.homeent.notice.Notice
 import cn.thelama.homeent.p.PrivateHandler
@@ -196,6 +197,11 @@ class HomeEntity : JavaPlugin(), Listener {
                 setExecutor(HomeHandler)
             }
 
+            MotdManager.init(this.dataFolder)
+            this.getCommand("motd")!!.apply {
+                setExecutor(MotdManager)
+            }
+
             val catWeight = File(dataFolder, "cat")
             if(!catWeight.exists()) {
                 catWeight.createNewFile()
@@ -218,6 +224,7 @@ class HomeEntity : JavaPlugin(), Listener {
             server.pluginManager.registerEvents(PrivateHandler, this)
             server.pluginManager.registerEvents(ShowManager, this)
             server.pluginManager.registerEvents(PrefixManager, this)
+            server.pluginManager.registerEvents(MotdManager, this)
 
             server.onlinePlayers.forEach {
                 it.setDisplayName(
@@ -242,6 +249,7 @@ class HomeEntity : JavaPlugin(), Listener {
         WarpHandlerV2.save()
         AuthHandler.save()
         PrefixManager.save()
+        MotdManager.save(this.dataFolder)
 
         val catFile = File(dataFolder, "cat")
         catFile.delete()
