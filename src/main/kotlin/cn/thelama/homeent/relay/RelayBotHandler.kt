@@ -1,6 +1,7 @@
 package cn.thelama.homeent.relay
 
 import cn.thelama.homeent.HomeEntity
+import cn.thelama.homeent.secure.AuthHandler
 import kotlinx.coroutines.isActive
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
@@ -17,7 +18,7 @@ object RelayBotHandler : CommandExecutor {
             if (args.isNotEmpty()) {
                 when (args[0]) {
                     "restart" -> {
-                        if (!(sender is Player && sender.uniqueId in HomeEntity.instance.maintainers) || sender !is ConsoleCommandSender) {
+                        if (!(sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender !is ConsoleCommandSender) {
                             return true
                         }
 
@@ -66,6 +67,14 @@ object RelayBotHandler : CommandExecutor {
                             } else {
                                 sender.sendMessage("${ChatColor.GREEN}你的Relay功能已启用，现在你的消息会被转发到Telegram")
                                 disabledPlayers.add(sender.uniqueId)
+                            }
+                        }
+                    }
+
+                    "say" -> {
+                        if(sender is ConsoleCommandSender || (sender is Player && AuthHandler.maintainer(sender.uniqueId))) {
+                            if(args.size > 1) {
+                                HomeEntity.instance.botInstance.say(args.slice(2..args.size).joinToString(separator = " ") { it })
                             }
                         }
                     }

@@ -1,6 +1,7 @@
 package cn.thelama.homeent.back
 
 import cn.thelama.homeent.HomeEntity
+import cn.thelama.homeent.secure.AuthHandler
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
 import org.bukkit.command.CommandExecutor
@@ -11,7 +12,7 @@ object BackHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
         if(command.name == "back") {
             if(sender is Player) {
-                if(!HomeEntity.instance.isLogin(sender)) {
+                if(!AuthHandler.getLoginState(sender.uniqueId)) {
                     return true
                 }
                 if(HomeEntity.instance.lastTeleport.containsKey(sender.uniqueId)) {

@@ -1,6 +1,6 @@
 name: "HomeEntity"
 main: "cn.thelama.homeent.HomeEntity"
-version: 1.5.0
+version: 1.6.0
 commands:
   hent:
 
@@ -10,7 +10,9 @@ commands:
 
   back:
 
-  session:
+  auth:
+
+  admin:
 
   exit:
 
@@ -27,3 +29,13 @@ commands:
   tpdeny:
 
   relay:
+
+  home:
+
+  sethome:
+
+  cat:
+
+  feed:
+
+  motd:

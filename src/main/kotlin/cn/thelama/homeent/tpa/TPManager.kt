@@ -10,6 +10,10 @@ import org.bukkit.ChatColor
 import org.bukkit.entity.Player
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 object TPManager {
     private val tpRequestsGo: HashMap<UUID, MutableList<UUID>> = hashMapOf()
@@ -24,7 +28,6 @@ object TPManager {
             }
         }
 
-        from.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送请求已发送")
         val base = ComponentBuilder("${ChatColor.GOLD}${from.name} 请求传送到您身边 ")
         val accept = ComponentBuilder("${ChatColor.GRAY}[${ChatColor.GREEN}接受${ChatColor.GRAY}]")
         accept.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept go ${from.uniqueId}")
@@ -55,7 +58,6 @@ object TPManager {
             }
         }
 
-        from.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送请求已发送")
         val base = ComponentBuilder("${ChatColor.GOLD}${from.name} 请求传送他身边 ")
         val accept = ComponentBuilder("${ChatColor.GRAY}[${ChatColor.GREEN}接受${ChatColor.GRAY}]")
         accept.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept here ${from.uniqueId}")
@@ -81,8 +83,16 @@ object TPManager {
         synchronized(tpRequestsHere) {
             if(to.uniqueId in tpRequestsHere) {
                 if(uuid in tpRequestsHere[to.uniqueId]!!) {
-                    to.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
-                    to.teleport(Bukkit.getPlayer(uuid) ?: return)
+                    val player = Bukkit.getPlayer(uuid) ?: return
+
+                    val cost = ceil(sqrt((to.location.x - player.location.x).pow(2.0) + (to.location.z - player.location.z).pow(2.0)) / 100)
+                    if(player.health > cost) {
+                        to.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
+                        to.teleport(player)
+                    } else {
+                        player.sendMessage("${ChatColor.RED}无法传送! 您当前的血量不足以到达 ${to.name} 的位置! 您的血量: ${floor(player.health)}❤ 需要血量: $cost❤")
+                    }
+
                     tpRequestsHere[to.uniqueId]!! -= uuid
                 }
             }   
@@ -95,8 +105,13 @@ object TPManager {
             if(to.uniqueId in tpRequestsGo) {
                 if(uuid in tpRequestsGo[to.uniqueId]!!) {
                     Bukkit.getPlayer(uuid)?.also {
-                        it.teleport(to)
-                        it.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
+                        val cost = ceil(sqrt((to.location.x - it.location.x).pow(2.0) + (to.location.z - it.location.z).pow(2.0)) / 100)
+                        if(it.health > cost) {
+                            it.teleport(to)
+                            it.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
+                        } else {
+                            it.sendMessage("${ChatColor.RED}无法传送! 您当前的血量不足以到达 ${to.name} 的位置! 您的血量: ${floor(it.health)}❤ 需要血量: $cost❤")
+                        }
                     }
                     tpRequestsGo[to.uniqueId]!! -= uuid
                 }
