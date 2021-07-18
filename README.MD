@@ -107,7 +107,7 @@ requester -> 请求玩家
               向上取整(平方根(平方(目标玩家x坐标 - 请求玩家x坐标) + 平方(目标玩家y坐标 - 请求玩家y坐标)) / 100)
 传送扣除血量 = ceil(sqrt((target.x - requester.x).pow(2.0) + (target.z - requester.z).pow(2.0)) / 100)
 ```
-![formula](https://latex.codecogs.com/gif.latex?TeleportCost%20%3D%20%5Clceil%20%5Csqrt%20%7B%28x_%7Btarget%7D%20&plus;%20x_%7Brequester%7D%29%5E2%20&plus;%20%28z_%7Btarget%7D%20&plus;%20z_%7Brequester%7D%29%5E2%7D%20%5Cdiv%20100%20%5Crceil)
+![formula](https://latex.codecogs.com/gif.latex?TeleportCost%20%3D%20%5Clceil%20%5Csqrt%5B2%5D%7B%28x_%7Btarget%7D%20-%20x_%7Brequester%7D%29%5E2%20&plus;%20%28z_%7Btarget%7D%20-%20z_%7Brequester%7D%29%5E2%7D%20%5Cdiv%20100%20%5Crceil)
 
 ## 更新计划
 
