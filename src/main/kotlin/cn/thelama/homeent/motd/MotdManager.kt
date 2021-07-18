@@ -25,7 +25,7 @@ object MotdManager : Listener, CommandExecutor {
             motd.createNewFile()
             mutableListOf("", "")
         } else {
-            val fr = FileReader(motd)
+            val fr = FileReader(motd, charset("UTF-8"))
             fr.readLines().toMutableList()
         }
     }
@@ -83,7 +83,7 @@ object MotdManager : Listener, CommandExecutor {
         if(!motd.exists()) {
             motd.createNewFile()
         }
-        val fw = FileWriter(motd)
+        val fw = FileWriter(motd, charset("UTF-8"))
         fw.write(lines.joinToString(separator = "\n"))
         fw.flush()
         fw.close()

@@ -5,10 +5,7 @@ import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
 import net.minecraft.network.protocol.Packet
-import net.minecraft.network.protocol.game.PacketPlayInChat
-import net.minecraft.network.protocol.game.PacketPlayInKeepAlive
-import net.minecraft.network.protocol.game.PacketPlayOutChat
-import net.minecraft.network.protocol.game.PacketPlayOutKeepAlive
+import net.minecraft.network.protocol.game.*
 import org.bukkit.ChatColor
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer
 
@@ -54,7 +51,7 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                                 AuthHandler.setLoginState(player.uniqueId, true)
                                 sendCachedPackets()
                             } else {
-                                player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
+                                player.sendMessage("${ChatColor.RED}用户名已存在! 请更换用户名")
                             }
                             return
                         }
@@ -90,7 +87,7 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
             return
         }
 
-        if(msg is PacketPlayOutKeepAlive || msg is PacketPlayOutChat) {
+        if(msg is PacketPlayOutKeepAlive || msg is PacketPlayOutChat || msg is PacketPlayOutKickDisconnect) {
             super.write(ctx, msg, promise)
         } else if(msg is Packet<*>) {
             packets.add(msg)

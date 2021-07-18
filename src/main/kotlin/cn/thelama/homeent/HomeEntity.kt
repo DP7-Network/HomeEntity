@@ -78,11 +78,6 @@ class HomeEntity : JavaPlugin(), Listener {
         .event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity"))
         .create()).create()
 
-    override fun onLoad() {
-        logger.info("预加载...")
-        logger.info(LocationEntry().toString())
-    }
-
     override fun onEnable() {
         instance = this
         runCatching {
