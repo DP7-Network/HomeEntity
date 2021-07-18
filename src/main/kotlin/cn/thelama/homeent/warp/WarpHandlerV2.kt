@@ -96,7 +96,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
                         if(!checkName(args[1], sender)) {
                             return true
                         }
-                        if (args.size >= 3 && (args.last() == "force" || args[1] !in tmpMap)) {
+                        if (args.size >= 2 && (args.last() == "force" || args[1] !in tmpMap)) {
                             tmpMap[args[1]] = LocationEntry(args[1], sender.location.x, sender.location.y, sender.location.z, GameWorld.toConfigurationID(sender.world.uid),"")
                             if(args.size > 3) {
                                 tmpMap[args[1]]!!.description = args[3]
@@ -113,8 +113,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
             "rm" -> {
                 if(args.size > 1) {
                     if (args.size > 2 && args[2] == "force") {
-                        warps[sender.uniqueId]!!.remove(args[1])
-                        sender.sendMessage("已删除地标 ${ChatColor.GOLD}${args[1]}")
+                        sender.sendMessage("已删除地标 ${ChatColor.GOLD}${warps[sender.uniqueId]!!.remove(args[1])?.name}")
                     } else {
                         val confirmButton = ComponentBuilder(
                             "${ChatColor.GOLD}${ChatColor.UNDERLINE}点击这里${ChatColor.RESET}")

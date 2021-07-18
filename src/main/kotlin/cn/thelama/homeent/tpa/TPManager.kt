@@ -28,7 +28,6 @@ object TPManager {
             }
         }
 
-        from.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送请求已发送")
         val base = ComponentBuilder("${ChatColor.GOLD}${from.name} 请求传送到您身边 ")
         val accept = ComponentBuilder("${ChatColor.GRAY}[${ChatColor.GREEN}接受${ChatColor.GRAY}]")
         accept.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept go ${from.uniqueId}")
@@ -59,7 +58,6 @@ object TPManager {
             }
         }
 
-        from.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送请求已发送")
         val base = ComponentBuilder("${ChatColor.GOLD}${from.name} 请求传送他身边 ")
         val accept = ComponentBuilder("${ChatColor.GRAY}[${ChatColor.GREEN}接受${ChatColor.GRAY}]")
         accept.currentComponent.clickEvent = ClickEvent(ClickEvent.Action.RUN_COMMAND, "/tpaccept here ${from.uniqueId}")

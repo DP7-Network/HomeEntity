@@ -85,7 +85,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
         } else {
             e.format =
                 "${ChatColor.AQUA}[${ChatColor.RESET}${HomeEntity.instance.parseWorld(e.player.location.world?.name)}${ChatColor.AQUA}] " +
-                        "${ChatColor.RESET}${prefixes[e.player.uniqueId]}${ChatColor.RESET} " +
+                        "${ChatColor.RESET}${prefixes[e.player.uniqueId]?.prefix ?: ""}${ChatColor.RESET} " +
                         "${ChatColor.YELLOW}${e.player.name}${ChatColor.RESET}: " +
                         "${ChatColor.RESET}%2\$s"
         }

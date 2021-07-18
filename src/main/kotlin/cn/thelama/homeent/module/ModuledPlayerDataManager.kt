@@ -12,10 +12,6 @@ import org.bukkit.configuration.file.FileConfiguration
 import java.lang.reflect.Type
 import java.util.*
 
-/**
- * Not tested feature!
- * TODO: Test this feature
- */
 object ModuledPlayerDataManager {
     private val GSON = Gson()
     private lateinit var mongoClient: MongoClient

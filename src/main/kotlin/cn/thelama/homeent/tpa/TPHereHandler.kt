@@ -30,13 +30,11 @@ object TPHereHandler : CommandExecutor {
                 return true
             } else {
                 if(!(args.size > 1 && args[1] == "confirm")) {
-                    val msg = ComponentBuilder("${ChatColor.GOLD}将 ${args[0]} 传送到您的位置需要消耗血量: ${ChatColor.RESET}$cost${ChatColor.RED}❤${ChatColor.GOLD} 您当前血量: ${ChatColor.RESET}${floor(sender.health)}${ChatColor.RED}❤")
-                    val btn = ComponentBuilder("${ChatColor.GREEN}[接受]")
-                    btn.event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "$lable confirm"))
-                    btn.event(HoverEvent(HoverEvent.Action.SHOW_TEXT).apply {
-                        this.addContent(Text("发送一个传送到这里请求"))
-                    })
-
+                    val msg = ComponentBuilder("${ChatColor.GOLD}将 ${args[0]} 传送到您的位置需要消耗血量: ${ChatColor.RESET}$cost${ChatColor.RED}❤${ChatColor.GOLD} 您当前血量: ${ChatColor.RESET}${floor(sender.health)}${ChatColor.RED}❤ ")
+                    val btn = ComponentBuilder("${ChatColor.GRAY}[${ChatColor.GREEN}接受${ChatColor.GRAY}]")
+                    btn.event(ClickEvent(ClickEvent.Action.RUN_COMMAND, "/$lable ${args.joinToString(separator = " ")} confirm confirm"))
+                    btn.event(HoverEvent(HoverEvent.Action.SHOW_TEXT, Text("发送一个传送到这里请求")))
+                    msg.append(btn.create())
                     sender.spigot().sendMessage(*msg.create())
                     return true
                 }
