@@ -2,7 +2,7 @@
 
 [![996.icu](https://img.shields.io/badge/link-996.icu-red.svg)](https://996.icu)
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
-[![Server](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/2704ba23.123nat.com:26588 )](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/2704ba23.123nat.com:26588)
+[![Server](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/39.105.115.28:46277)](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/39.105.115.28:46277)
 
 Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天群: [`Telegram`](https://t.me/joinchat/raRF9e8WOs84NzM1)
 
