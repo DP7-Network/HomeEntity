@@ -87,6 +87,7 @@ object TPManager {
 
                     val cost = ceil(sqrt((to.location.x - player.location.x).pow(2.0) + (to.location.z - player.location.z).pow(2.0)) / 100)
                     if(player.health > cost) {
+                        player.damage(cost)
                         to.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
                         to.teleport(player)
                     } else {
@@ -107,6 +108,7 @@ object TPManager {
                     Bukkit.getPlayer(uuid)?.also {
                         val cost = ceil(sqrt((to.location.x - it.location.x).pow(2.0) + (to.location.z - it.location.z).pow(2.0)) / 100)
                         if(it.health > cost) {
+                            it.damage(cost)
                             it.teleport(to)
                             it.sendMessage("${ChatColor.GOLD}${ChatColor.ITALIC}传送中")
                         } else {

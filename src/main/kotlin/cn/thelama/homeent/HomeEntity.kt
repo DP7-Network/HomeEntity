@@ -23,6 +23,8 @@ import cn.thelama.homeent.warp.HomeHandler
 import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import net.md_5.bungee.api.chat.BaseComponent
@@ -53,6 +55,7 @@ import java.security.MessageDigest
 import java.util.*
 import kotlin.system.measureTimeMillis
 import java.io.FileReader
+import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
@@ -110,6 +113,10 @@ class HomeEntity : JavaPlugin(), Listener {
                 ModuledPlayerDataManager.init(this.config)
             }.also {
                 println("加载玩家数据用时 ${it}ms")
+            }
+
+            Gson().fromJson<HashMap<String, String>>(InputStreamReader(this.javaClass.classLoader.getResourceAsStream("zh-cn.lang")!!), object : TypeToken<HashMap<String, String>>() {}.type).also {
+                minecraftTranslation = it ?: HashMap()
             }
 
             if(config.getBoolean("proxy.enable")) {
@@ -259,7 +266,11 @@ class HomeEntity : JavaPlugin(), Listener {
             botInstance.shutdown()
         }
 
-        logger.info("${ChatColor.RED}Reached goal 'shutdown'")
+        if(Thread.getAllStackTraces().toString().contains("reload")) {
+            botInstance.say("[-] Charmless Server Instance")
+        }
+
+        logger.info("${ChatColor.RED}HomeEntity 成功卸载")
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -361,13 +372,6 @@ class HomeEntity : JavaPlugin(), Listener {
         }, 30 * 20)
 
         botInstance.say("[+] ${e.player.name}")
-    }
-
-    @EventHandler
-    fun onPlayerDamage(e: EntityDamageByEntityEvent) {
-        if(e.entity is Player && AuthHandler.getLoginState(e.entity.uniqueId)) {
-            e.isCancelled = true
-        }
     }
 
     @EventHandler

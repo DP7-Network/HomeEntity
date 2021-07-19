@@ -440,6 +440,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
     }
 
     fun setHomeLocation(player: Player, isForce: Boolean = false): Boolean {
+        if(player.uniqueId !in warps) {
+            warps[player.uniqueId] = LinkedTreeMap()
+        }
         val tmpMap = warps[player.uniqueId]!!
         if (!isForce && tmpMap.containsKey("home")) return false
         val location = player.location
