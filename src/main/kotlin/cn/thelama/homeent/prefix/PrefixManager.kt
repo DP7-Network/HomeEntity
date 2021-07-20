@@ -23,7 +23,7 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
     }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if((sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender is ConsoleCommandSender) {
+        if((sender is Player && AuthHandler.maintainer(sender.uniqueId, sender)) || sender is ConsoleCommandSender) {
             if(args.isNotEmpty()) {
                 when(args.size) {
                     2 -> {
@@ -67,6 +67,8 @@ object PrefixManager : CommandExecutor, ModuleCommand, Listener {
             } else {
                 sender.spigot().sendMessage(*HomeEntity.instance.commandHelp)
             }
+        } else {
+            sender.sendMessage("${ChatColor.RED}Permission denied(maintainer).")
         }
         return true
     }
