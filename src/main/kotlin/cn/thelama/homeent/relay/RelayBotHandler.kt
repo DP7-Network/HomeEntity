@@ -18,7 +18,7 @@ object RelayBotHandler : CommandExecutor {
             if (args.isNotEmpty()) {
                 when (args[0]) {
                     "restart" -> {
-                        if (!(sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender !is ConsoleCommandSender) {
+                        if (!(sender is Player && AuthHandler.maintainer(sender.uniqueId, sender)) || sender !is ConsoleCommandSender) {
                             return true
                         }
 
@@ -72,7 +72,7 @@ object RelayBotHandler : CommandExecutor {
                     }
 
                     "say" -> {
-                        if(sender is ConsoleCommandSender || (sender is Player && AuthHandler.maintainer(sender.uniqueId))) {
+                        if(sender is ConsoleCommandSender || (sender is Player && AuthHandler.maintainer(sender.uniqueId, sender))) {
                             if(args.size > 1) {
                                 HomeEntity.instance.botInstance.say(args.slice(2..args.size).joinToString(separator = " ") { it })
                             }
