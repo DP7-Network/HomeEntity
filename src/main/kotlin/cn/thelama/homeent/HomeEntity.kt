@@ -220,6 +220,8 @@ class HomeEntity : JavaPlugin(), Listener {
                 setExecutor(MyLovelyCat)
             }
 
+            BossBarTips.init()
+
             // Event Register
 
             server.pluginManager.registerEvents(this, this)
@@ -227,6 +229,7 @@ class HomeEntity : JavaPlugin(), Listener {
             server.pluginManager.registerEvents(ShowManager, this)
             server.pluginManager.registerEvents(PrefixManager, this)
             server.pluginManager.registerEvents(MotdManager, this)
+            server.pluginManager.registerEvents(BossBarTips, this)
 
             server.onlinePlayers.forEach {
                 it.setDisplayName(
@@ -252,6 +255,8 @@ class HomeEntity : JavaPlugin(), Listener {
         AuthHandler.save()
         PrefixManager.save()
         MotdManager.save(this.dataFolder)
+
+        BossBarTips.shutdown()
 
         val catFile = File(dataFolder, "cat")
         catFile.delete()
@@ -307,6 +312,8 @@ class HomeEntity : JavaPlugin(), Listener {
         e.quitMessage =
             "${ChatColor.GRAY}[${ChatColor.RED}-${ChatColor.GRAY}] ${ChatColor.GRAY}${e.player.name}"
         botInstance.say("[-] ${e.player.name}")
+
+        AuthHandler.removeLimit(e.player)
     }
     
     @EventHandler
@@ -369,7 +376,7 @@ class HomeEntity : JavaPlugin(), Listener {
                 AuthHandler.setLoginState(e.player.uniqueId, false)
                 e.player.kickPlayer("${ChatColor.RED}登录验证超时")
             }
-        }, 30 * 20)
+        }, 60 * 20)
 
         botInstance.say("[+] ${e.player.name}")
     }

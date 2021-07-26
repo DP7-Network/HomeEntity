@@ -1,9 +1,12 @@
 package cn.thelama.homeent.secure
 
+import cn.thelama.homeent.BossBarTips
 import cn.thelama.homeent.HomeEntity
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
+import net.minecraft.network.chat.ChatMessageType
+import net.minecraft.network.chat.IChatBaseComponent
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
 import org.bukkit.ChatColor
@@ -26,7 +29,9 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                             if(AuthHandler.checkCredentials(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}登陆成功！欢迎回家 :)")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/Lama3L9R/HomeEntity")
+                                HomeEntity.instance.logger.info("成功登陆玩家 ${player.name}")
                                 AuthHandler.setLoginState(player.uniqueId, true)
+                                HomeEntity.instance.logger.info("准备为 ${player.name} 发送数据包")
                                 sendCachedPackets()
                             } else {
                                 player.sendMessage("${ChatColor.RED}密码错误! 您注册了吗?")
@@ -48,7 +53,9 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                             if(AuthHandler.register(player.uniqueId, sl[1])) {
                                 player.sendMessage("${ChatColor.GREEN}注册成功, 欢迎来到 ${HomeEntity.instance.config.getString("main.serverName")}")
                                 player.sendMessage("${ChatColor.GREEN}有关指令帮助请访问: https://github.com/DP7-Network/HomeEntity")
+                                HomeEntity.instance.logger.info("成功注册玩家 ${player.name}")
                                 AuthHandler.setLoginState(player.uniqueId, true)
+                                HomeEntity.instance.logger.info("准备为 ${player.name} 发送数据包")
                                 sendCachedPackets()
                             } else {
                                 player.sendMessage("${ChatColor.RED}用户名已存在! 请更换用户名")
@@ -96,9 +103,10 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
 
     private fun sendCachedPackets() {
         packets.forEach {
-         // craftPlayer.nmsEntityPlayer.playerConnection.networkManager.channel
-            player.handle.b.a.k.writeAndFlush(it)
+         // craftPlayer.nmsEntityPlayer.playerConnection
+            player.handle.b.sendPacket(it)
         }
         AuthHandler.removeLimit(player)
+        BossBarTips.addPlayer(player)
     }
 }

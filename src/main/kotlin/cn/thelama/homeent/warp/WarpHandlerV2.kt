@@ -436,6 +436,9 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
     }
 
     fun getHomeLocation(player: Player): Location? {
+        if(player.uniqueId !in warps) {
+            warps[player.uniqueId] = LinkedTreeMap()
+        }
         return warps[player.uniqueId]!!["home"]?.createLocation()
     }
 

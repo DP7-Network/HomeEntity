@@ -116,12 +116,12 @@ object AuthHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerPe
     }
 
     fun setLoginState(uuid: UUID, state: Boolean) {
-        synchronized(unloggedInPlayers) {
-            if(state) {
-                unloggedInPlayers -= uuid
-            } else {
-                unloggedInPlayers += uuid
-            }
+        if(state) {
+            HomeEntity.instance.logger.info("已在未登录玩家移除 $uuid")
+            unloggedInPlayers -= uuid
+        } else {
+            HomeEntity.instance.logger.info("已在未登录玩家添加 $uuid")
+            unloggedInPlayers += uuid
         }
     }
 
