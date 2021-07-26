@@ -14,7 +14,7 @@ import org.bukkit.entity.Player
 
 object AdminHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
-        if(command.name == "admin" && ((sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
+        if(command.name == "admin" && ((sender is Player && AuthHandler.maintainer(sender.uniqueId, sender)) || sender is ConsoleCommandSender)) {
             if(args.size >= 2) {
                 when(args[0]) {
                     "maintainer" -> {

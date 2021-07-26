@@ -31,7 +31,7 @@ object MotdManager : Listener, CommandExecutor {
     }
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if(command.name == "motd" && ((sender is Player && AuthHandler.maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
+        if(command.name == "motd" && ((sender is Player && AuthHandler.maintainer(sender.uniqueId, sender)) || sender is ConsoleCommandSender)) {
             if(args.size >= 3) {
                 when(args[0]) {
                     "set" -> {

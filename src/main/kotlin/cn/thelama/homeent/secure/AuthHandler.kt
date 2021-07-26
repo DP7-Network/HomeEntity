@@ -22,7 +22,7 @@ object AuthHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerPe
     private val unloggedInPlayers = mutableListOf<UUID>()
 
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {
-        if(command.name == "auth" && ((sender is Player && maintainer(sender.uniqueId)) || sender is ConsoleCommandSender)) {
+        if(command.name == "auth" && ((sender is Player && maintainer(sender.uniqueId, sender)) || sender is ConsoleCommandSender)) {
             if(args.size >= 2) {
                 when(args[0]) {
                     "login" -> {
@@ -102,7 +102,11 @@ object AuthHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerPe
 
     override fun config(uuid: UUID): PlayerPermissionEntry? = config[uuid]
 
-    fun maintainer(uuid: UUID): Boolean = config(uuid)?.permissionLevel ?: 0 > 0
+    fun maintainer(uuid: UUID, sender: CommandSender? = null): Boolean {
+        val result = config(uuid)?.permissionLevel ?: 0 > 0
+        if (!result) sender?.sendMessage("${ChatColor.RED}Permission denied(maintainer).")
+        return result
+    }
 
     fun checkCredentials(uuid: UUID, encPassword: String): Boolean = config(uuid)?.encryptedPassword == HomeEntity.instance.sha256(encPassword)
 
