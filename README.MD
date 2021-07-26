@@ -99,22 +99,15 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 ### 其他插件功能:
 - @<玩家名> *给玩家发送一个提醒title, 在聊天区使用, 玩家名后请留一个空格*
 
-tpa / tphere 计价方法: 
-```
-target -> 目标玩家
-requester -> 请求玩家
-
-              向上取整(平方根(平方(目标玩家x坐标 - 请求玩家x坐标) + 平方(目标玩家y坐标 - 请求玩家y坐标)) / 100)
-传送扣除血量 = ceil(sqrt((target.x - requester.x).pow(2.0) + (target.z - requester.z).pow(2.0)) / 100)
-```
-![formula](https://latex.codecogs.com/gif.latex?TeleportCost%20%3D%20%5Clceil%20%5Csqrt%5B2%5D%7B%28x_%7Btarget%7D%20-%20x_%7Brequester%7D%29%5E2%20&plus;%20%28z_%7Btarget%7D%20-%20z_%7Brequester%7D%29%5E2%7D%20%5Cdiv%20100%20%5Crceil)
+tpa / tphere 计价方法:
+![formula](https://i.imgur.com/UCw2pAZ.jpg)
 
 ## 更新计划
 
 - 核心功能
   - 加急
 	+ [ ] `WIP` 切换到免费的CI并恢复自动更新 -> pr:gh-actions-test to master
-	+ [ ] 指令帮助
+	+ [x] 指令帮助
   + [x] 翻新warp功能, 适配群投票中决定的更新内容
   + [x] TPA成本
   + [ ] 全部可配置化
