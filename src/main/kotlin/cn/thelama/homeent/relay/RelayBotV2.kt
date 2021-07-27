@@ -1,6 +1,8 @@
 package cn.thelama.homeent.relay
 
 import cn.thelama.homeent.HomeEntity
+import cn.thelama.homeent.mylovelycat.FeedResult
+import cn.thelama.homeent.mylovelycat.MyLovelyCat
 import dev.inmo.tgbotapi.bot.TelegramBot
 import dev.inmo.tgbotapi.extensions.api.send.reply
 import dev.inmo.tgbotapi.extensions.api.send.sendMessage
@@ -18,6 +20,8 @@ import kotlinx.coroutines.*
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.CommandSender
+import kotlin.math.abs
+import kotlin.random.Random
 
 @OptIn(DelicateCoroutinesApi::class)
 class RelayBotV2(private val groupId: Long, private val token: String): Relay {
@@ -40,8 +44,10 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
         }
 
         bot.buildBehaviour(scope, defaultExceptionsHandler = {
-            it.printStackTrace()
-            println("Relay V2 Got a exception! Please check it above then report to developers.")
+            if(it !is CancellationException) {
+                it.printStackTrace()
+                println("Relay V2 Got a exception! Please check it above then report to developers.")
+            }
         }) {
             onCommand("onlines") { msg ->
                 val onlines = Bukkit.getOnlinePlayers()
@@ -64,6 +70,33 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
             onCommand("debug", requireOnlyCommandInMessage = false) {
                 for((k, v) in it.parseCommandsWithParams()) {
                     reply(it, "$k - $v")
+                }
+            }
+
+            onCommand("cat", requireOnlyCommandInMessage = false) {
+                if(it.asFromUserMessage()?.user?.username?.username == "abslama" && it.parseCommandsWithParams()["cat"]?.contains("reset") == true) {
+                    Bukkit.broadcastMessage("${ChatColor.GOLD}猫猫的主人将猫猫重置啦! 现在猫猫的重量${String.format("%.2f", MyLovelyCat.weight())}kg")
+                    sendMessage(it.chat, "猫猫的主人将猫猫重置啦! 现在猫猫的重量${String.format("%.2f", MyLovelyCat.weight())}kg")
+                } else {
+                    sendMessage(it.chat, "当前猫猫的重量: ${String.format("%.2f", MyLovelyCat.weight())}kg")
+                }
+            }
+
+            onCommand("feed") {
+                val msg = it.asFromUserMessage() ?: return@onCommand
+                val add = Random.nextDouble(-10.0, 10.0)
+                when(MyLovelyCat.feed(add)) {
+                    FeedResult.INCREASE -> {
+                        sendMessage(it.chat, "${ChatColor.GREEN}好耶!猫猫又胖了${ChatColor.GOLD}${String.format("%.2f", add)}${ChatColor.GREEN}kg, 现在猫猫有: ${ChatColor.GOLD}${String.format("%.2f", MyLovelyCat.weight())}${ChatColor.GREEN}kg")
+                    }
+
+                    FeedResult.DECREASE -> {
+                        sendMessage(it.chat, "${ChatColor.RED}猫猫因为没吃舒服导致瘦了${ChatColor.GOLD}${String.format("%.2f", abs(add))}${ChatColor.RED}kg, 现在猫猫有: ${ChatColor.GOLD}${String.format("%.2f", MyLovelyCat.weight())}${ChatColor.RED}kg")
+                    }
+
+                    FeedResult.DEATH -> {
+                        Bukkit.broadcastMessage("${ChatColor.RED}坏!!! ${ChatColor.STRIKETHROUGH}${msg.user.firstName} ${msg.user.lastName}吧猫猫杀死了!")
+                    }
                 }
             }
 

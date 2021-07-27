@@ -1,4 +1,5 @@
 build
 .idea
 .gradle
+out
 src/main/resources/BUILD.INFO
