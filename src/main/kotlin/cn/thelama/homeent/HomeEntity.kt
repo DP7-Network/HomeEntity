@@ -25,6 +25,7 @@ import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import io.ktor.client.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import net.md_5.bungee.api.chat.BaseComponent
@@ -35,6 +36,7 @@ import org.bukkit.*
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.entity.Player
@@ -59,11 +61,14 @@ import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.6 Pre-Release"
+        const val VERSION = "@version"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
+        lateinit var GITHUB_API_URL: String
         lateinit var BRANCH: String
+        lateinit var REPO: String
         var BUILD_NUMBER: Int = 0
+
         val theServer = run {
             val server = Bukkit.getServer() as CraftServer
             val dedicatedServerField = server.javaClass.getDeclaredField("console")
@@ -81,29 +86,32 @@ class HomeEntity : JavaPlugin(), Listener {
         .event(ClickEvent(ClickEvent.Action.OPEN_URL, "https://github.com/DP7-Network/HomeEntity"))
         .create()).create()
 
+    override fun onLoad() {
+        runCatching {
+            val build = YamlConfiguration.loadConfiguration(InputStreamReader(Thread.currentThread().contextClassLoader.getResourceAsStream("plugin.yml")!!))
+            BUILD_NUMBER = build.getInt("id")
+            COMMIT_HASH = build.getString("hash")!!
+            BRANCH = build.getString("branch")!!
+            GITHUB_API_URL = build.getString("github")!!
+            REPO = build.getString("repo")!!
+        }.onFailure {
+            BUILD_NUMBER = Int.MAX_VALUE
+            COMMIT_HASH = "Unknown"
+            BRANCH = "Unknown"
+            GITHUB_API_URL = "https://api.Github.com"
+            REPO = "Unknown"
+            this.logger.info("非官方构建! 无法确认版本号等信息! 自动更新将不可用!")
+        }
+    }
+
     override fun onEnable() {
         instance = this
-        runCatching {
-            Properties().also {
-                it.load(this::class.java.classLoader.getResourceAsStream("BUILD.INFO"))
-                BRANCH = it.getProperty("BRANCH").replace("origin/", "")
-                COMMIT_HASH = it.getProperty("HASH")
-                BUILD_NUMBER = it.getProperty("BUILD").toInt()
-                if(it.contains("UNSTABLE")) {
-                    Bukkit.getLogger().warning("你正在使用**不稳定**的版本!!!")
-                }
-            }
-        }.onFailure {
-            Bukkit.getLogger().warning("无法获取插件版本信息!!")
-            BRANCH = "Unknown"
-            COMMIT_HASH = ""
-        }
 
         measureTimeMillis {
             logger.runCatching {
                 info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION ($BRANCH@${COMMIT_HASH.substring(0, 7)})")
             }.onFailure {
-                logger.info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION (???@???")
+                logger.info("${ChatColor.GREEN}欢迎使用 HomeEntity $VERSION (???@???)")
             }
             if(!dataFolder.exists()) {
                 dataFolder.mkdir()
@@ -400,25 +408,12 @@ class HomeEntity : JavaPlugin(), Listener {
     }
 
     private fun launchCheckUpdatesTask() {
-        val proj = when(BRANCH) {
-            "master" -> {
-                "HomeEntity"
-            }
-
-            "devel" -> {
-                "HomeEntity-devel"
-            }
-
-            else -> {
-                return
-            }
-        }
         Bukkit.getScheduler().runTaskTimerAsynchronously(this, Runnable {
-            tryUpdate(proj)
+            tryUpdate()
         }, 0, 3600 * 20)
     }
 
-    private fun tryUpdate(stream: String, sync: Boolean = false) {
-        // WIP
+    private fun tryUpdate(sync: Boolean = false) {
+        // TODO Auto Update
     }
 }

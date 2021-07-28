@@ -69,7 +69,7 @@ publishing {
     repositories {
         maven {
             name = "GithubPackages"
-            url = URI.create("https://maven.pkg.github.com/DP7-Network/hello-world")
+            url = URI.create("https://maven.pkg.github.com/DP7-Network/HomeEntity")
             credentials {
                 username = System.getenv("GH_ACTOR")
                 password = System.getenv("GH_TOKEN")
