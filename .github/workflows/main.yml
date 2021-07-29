@@ -45,6 +45,7 @@ jobs:
 
           echo "替换版本信息..."
 
+          chmod +x .github/workflows/ConstantReplacer
           .github/workflows/ConstantReplacer @version $version ${GITHUB_WORKSPACE}/src
 
       - name: Build with Gradle
