@@ -45,7 +45,7 @@ jobs:
 
           echo "替换版本信息..."
 
-          ConstantReplacer @version $version ${GITHUB_WORKSPACE}/src
+          .github/workflows/ConstantReplacer @version $version ${GITHUB_WORKSPACE}/src
 
       - name: Build with Gradle
         run: gradle shadowJar
