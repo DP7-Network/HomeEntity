@@ -20,12 +20,13 @@ import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.tpa.*
 import cn.thelama.homeent.warp.HomeHandler
-import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
+import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
-import io.ktor.client.*
+import io.ktor.http.*
+import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import net.md_5.bungee.api.chat.BaseComponent
@@ -39,28 +40,27 @@ import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
-import org.yaml.snakeyaml.Yaml
 import sun.misc.Unsafe
 import java.io.File
 import java.io.FileWriter
+import java.io.FileReader
+import java.io.InputStreamReader
 import java.lang.reflect.Field
 import java.net.InetSocketAddress
 import java.net.Proxy
+import java.net.URL
 import java.security.MessageDigest
 import java.util.*
-import kotlin.system.measureTimeMillis
-import java.io.FileReader
-import java.io.InputStreamReader
+import javax.net.ssl.HttpsURLConnection
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
+        val GSON = Gson()
         const val VERSION = "@version"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
@@ -414,6 +414,19 @@ class HomeEntity : JavaPlugin(), Listener {
     }
 
     private fun tryUpdate(sync: Boolean = false) {
-        // TODO Auto Update
+        this.logger.info("尝试更新中...")
+        val urlString = "$GITHUB_API_URL/repos/$REPO/"
+        this.logger.info("Http请求 GET $urlString 获取最后一次提交hash...")
+        val req = URL(urlString).openConnection() as HttpsURLConnection
+        req.requestProperties["User-Agent"] = listOf("Mozilla/5.0 (Charmless Server II; CharmlessServerII64; x64) Java11 & Kotlin 1.5 Repo(DP7-Network/HomeEntity) ForAutoUpdateOnly; <3 Github")
+
+        if(req.responseCode == 200) {
+            val rootObj = GSON.fromJson(InputStreamReader(req.inputStream), JsonElement::class.java).asJsonObject
+            if(rootObj["sha"].asString != COMMIT_HASH) {
+                this.logger.info("当前提交: ${COMMIT_HASH.substring(0..8)} 与远程提交: ${rootObj["sha"].asString.substring(0..8)} 不符, 尝试更新!")
+            }
+        } else {
+            this.logger.info("${ChatColor.RED}请求失败! 服务器返回了错误码: ${req.responseCode}")
+        }
     }
 }
