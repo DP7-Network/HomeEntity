@@ -49,7 +49,8 @@ publishing {
         create<MavenPublication>("HomeEntity") {
             artifact(tasks["shadowJar"])
             pom {
-                name.set("homeEntity")
+                name.set("HomeEntity")
+                artifactId = "homeEntity"
                 description.set("A Minecraft spigot server plugin for DP7 Charmless")
                 url.set("https://github.com/DP7-Network/HomeEntity")
                 licenses {
