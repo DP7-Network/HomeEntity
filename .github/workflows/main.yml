@@ -58,11 +58,3 @@ jobs:
         with:
           name: HomeEntity Production
           path: ./build/libs/*-all.jar
-
-      # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
-      # the publishing section of your build.gradle
-      - name: Publish to GitHub Packages
-        run: gradle publish
-        env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

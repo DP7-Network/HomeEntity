@@ -43,38 +43,3 @@ tasks {
         }
     }
 }
-
-publishing {
-    publications {
-        create<MavenPublication>("HomeEntity") {
-            artifact(tasks["shadowJar"])
-            pom {
-                name.set("HomeEntity")
-                artifactId = "homeentity"
-                description.set("A Minecraft spigot server plugin for DP7 Charmless")
-                url.set("https://github.com/DP7-Network/HomeEntity")
-                licenses {
-                    license {
-                        name.set("Anti 996 License Version 1.0")
-                        url.set("https://github.com/996icu/996.ICU/blob/master/LICENSE")
-                    }
-                }
-                scm {
-                    connection.set("scm:git:git://github.com/DP7-Network/HomeEntity.git")
-                    developerConnection.set("scm:git:git://github.com/DP7-Network/HomeEntity.git")
-                    url.set("https://github.com/DP7-Network/HomeEntity")
-                }
-            }
-        }
-    }
-    repositories {
-        maven {
-            name = "GithubPackages"
-            url = URI.create("https://maven.pkg.github.com/DP7-Network/HomeEntity")
-            credentials {
-                username = System.getenv("GH_ACTOR")
-                password = System.getenv("GH_TOKEN")
-            }
-        }
-    }
-}
