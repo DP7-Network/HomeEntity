@@ -46,7 +46,8 @@ jobs:
           echo "替换 ${GITHUB_WORKSPACE}/src 中的版本信息常量..."
 
           chmod +x .github/workflows/ConstantReplacer
-          .github/workflows/ConstantReplacer @version $version $GITHUB_WORKSPACE/src
+          root=$GITHUB_WORKSPACE/src
+          .github/workflows/ConstantReplacer @version $version $root
 
       - name: Build with Gradle
         run: gradle shadowJar
