@@ -34,8 +34,8 @@ jobs:
 
           echo "repo: $GITHUB_REPOSITORY" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
           echo "仓库: $GITHUB_REPOSITORY"
-          echo "branch: $GITHUB_HEAD_REF" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
-          echo "分支: $GITHUB_HEAD_REF"
+          echo "branch: $GITHUB_REF" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
+          echo "分支: $GITHUB_REF"
           echo "id: $GITHUB_RUN_NUMBER" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
           echo "构建号: $GITHUB_RUN_NUMBER"
           echo "hash: $GITHUB_SHA" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
@@ -46,7 +46,7 @@ jobs:
           echo "替换版本信息..."
 
           chmod +x .github/workflows/ConstantReplacer
-          .github/workflows/ConstantReplacer @version $version ./src
+          .github/workflows/ConstantReplacer @version $version $GITHUB_WORKSPACE/src
 
       - name: Build with Gradle
         run: gradle shadowJar
