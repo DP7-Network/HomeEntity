@@ -46,10 +46,16 @@ jobs:
           echo "替换版本信息..."
 
           chmod +x .github/workflows/ConstantReplacer
-          .github/workflows/ConstantReplacer @version $version ${GITHUB_WORKSPACE}/src
+          .github/workflows/ConstantReplacer @version $version ./src
 
       - name: Build with Gradle
         run: gradle shadowJar
+        
+      - name: Upload a Build Artifact
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: HomeEntity Production
+          path: ./build/libs/*-all.jar
 
       # The USERNAME and TOKEN need to correspond to the credentials environment variables used in
       # the publishing section of your build.gradle
