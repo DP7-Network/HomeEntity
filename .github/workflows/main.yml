@@ -43,10 +43,11 @@ jobs:
           echo "github: $GITHUB_API_URL" >> "${GITHUB_WORKSPACE}/src/main/resources/build.yml"
           echo "Github 接口URL: $GITHUB_API_URL"
 
-          echo "替换 ${GITHUB_WORKSPACE}/src 中的版本信息常量..."
+
+          root=$GITHUB_WORKSPACE/src
+          echo "替换 $root 中的版本信息常量..."
 
           chmod +x .github/workflows/ConstantReplacer
-          root=$GITHUB_WORKSPACE/src
           .github/workflows/ConstantReplacer @version $version $root
 
       - name: Build with Gradle
