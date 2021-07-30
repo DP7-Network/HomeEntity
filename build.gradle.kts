@@ -50,7 +50,7 @@ publishing {
             artifact(tasks["shadowJar"])
             pom {
                 name.set("HomeEntity")
-                artifactId = "homeEntity"
+                artifactId = "homeentity"
                 description.set("A Minecraft spigot server plugin for DP7 Charmless")
                 url.set("https://github.com/DP7-Network/HomeEntity")
                 licenses {
