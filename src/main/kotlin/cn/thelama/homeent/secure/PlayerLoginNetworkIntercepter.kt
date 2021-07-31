@@ -97,6 +97,9 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
         if(msg is PacketPlayOutKeepAlive || msg is PacketPlayOutChat || msg is PacketPlayOutKickDisconnect) {
             super.write(ctx, msg, promise)
         } else if(msg is Packet<*>) {
+            if(packets.size > 10_000) {
+                player.kickPlayer("${ChatColor.RED}给你的登陆时间已过")
+            }
             packets.add(msg)
         }
     }
