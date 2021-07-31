@@ -16,6 +16,7 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 - 被[]括起来的参数代表选填(可不填)
 - 被|分割的参数代表选其一
 - 若有地方存在可支持但不支持的Tab补全则会用!Tab!进行标记
+- 指令/子指令标记为**加粗**时代表管理员专属
 
 #### 验证前可用
 
@@ -24,15 +25,16 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 
 #### 验证后可用
 
-- /prefix `[前缀|玩家名 <前缀>]` *设置玩家的前缀*
+- **/prefix** `[前缀|玩家名 <前缀>]` *设置玩家的前缀*
   - 前缀 *设置自己的前缀*
   - 玩家名 `<前缀>` *设置某个玩家的前缀*
+	
 - /cat `[reset]` *输出群猫猫的体重*
   - reset *拥有者 `Lama3L9R` 专用指令 用于重置猫猫*
 
 - /feed *投喂猫猫*
 
-- !Tab! /motd `[set|rm]` *如果参数为空则输出当前motd*
+- !Tab! **/motd** `[set|rm]` *如果参数为空则输出当前motd*
     - set `<行号> <内容...>` 设置motd某一行的内容, 支持&作为颜色符号
 	- rm `<行号>` 清空motd某一行的内容
 
@@ -48,13 +50,14 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 
 - /slime `<范围(-5 ~ 5)>` *查找附近的史莱姆区块*
 
-- !Tab! /auth `<limit|remove|reset|login>` `[...]` *登陆验证控制指令 管理员专属*
-	- limit `玩家名` *限制玩家数据包，玩家和服务器的通讯只留存 S16 S03 C31 C14 这四个数据包*
-	- remove `玩家名` *解除限制，发送限制期间所有服务器发送的数据包*
-	- reset `<密码>` *修改密码*
-	- login *为一名玩家登录*
+- !Tab! /auth `<limit|remove|reset|login|change>` `[...]` *登陆验证控制指令*
+	- **limit** `玩家名` *限制玩家数据包，玩家和服务器的通讯只留存 S16 S03 C31 C14 这四个数据包*
+	- **remove** `玩家名` *解除限制，发送限制期间所有服务器发送的数据包*
+	- **reset** `<密码>` *修改密码*
+	- **login** *为一名玩家登录*
+	- change 
 
-- !Tab! /admin `<maintainer|revoke|crash>` *管理员专属指令*
+- !Tab! **/admin** `<maintainer|revoke|crash>` *管理员专属指令*
   - crash *让一名玩家崩端 (相当于该玩家本人执行 `/exit crash` )*
   - maintainer `<玩家名字>` *添加一名维护者*
   - revoke *删除一名维护者*
@@ -82,7 +85,7 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 	- status *查看自己的消息同步状态*
 	- toggle *切换 同步/不同步 自己的消息到 Telegram*
 	- say *以Bot身份发送信息 管理员专属*
-	- restart *重新启动Bot(强制杀死Bot运行所在CoroutineScope) 管理员专属*
+	- **restart** *重新启动Bot(强制杀死Bot运行所在CoroutineScope) 管理员专属*
 
 #### 请勿使用
 
@@ -102,7 +105,14 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 tpa / tphere 计价方法:
 ![formula](https://i.imgur.com/UCw2pAZ.jpg)
 
-## 更新计划
+### 更新日志: 
+- `1.6.0` 
+	- `Patch-1`: 
+	  	+ 修改登陆超时判定到缓存数据包数量, 目前上限为10000, 平均最高每分钟数据包数量约为7500
+	  	+ 添加/auth change用于玩家自行修改密码 格式: /auth change <老密码> <新密码>
+	  	+ 添加 README 中更多信息
+	  
+### 更新计划
 
 - 核心功能
   - 加急
@@ -117,6 +127,7 @@ tpa / tphere 计价方法:
   + [x] 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI
   + [ ] TG玩家绑定
 
+---
 ## 贡献代码
 
 首先, 需要一个 GitHub 账号, 并熟悉 Kotlin / Gradle / Git / Bukkit API 基本用法以及熟悉 Minecraft 这款游戏,

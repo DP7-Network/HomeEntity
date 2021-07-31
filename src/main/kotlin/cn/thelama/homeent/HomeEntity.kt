@@ -59,7 +59,7 @@ import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.6 Pre-Release"
+        const val VERSION = "1.6.0-1 Release"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
@@ -366,17 +366,6 @@ class HomeEntity : JavaPlugin(), Listener {
         AuthHandler.limit(e.player)
         e.player.setDisplayName(
             "${ChatColor.AQUA}[${ChatColor.RESET}未登录${ChatColor.AQUA}] ${e.player.name}")
-
-        Bukkit.getScheduler().runTaskLater(this, Runnable {
-            if(AuthHandler.getLoginState(e.player.uniqueId)) {
-                AuthHandler.removeLimit(e.player)
-                e.player.setDisplayName(
-                        "${ChatColor.AQUA}[${parseWorld(e.player.world.name)}${ChatColor.AQUA}] ${e.player.name}")
-            } else {
-                AuthHandler.setLoginState(e.player.uniqueId, false)
-                e.player.kickPlayer("${ChatColor.RED}登录验证超时")
-            }
-        }, 60 * 20)
 
         botInstance.say("[+] ${e.player.name}")
     }
