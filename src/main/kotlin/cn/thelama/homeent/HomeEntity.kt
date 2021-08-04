@@ -59,7 +59,7 @@ import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.6 Pre-Release"
+        const val VERSION = "1.6.0-1 Pre-Release"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
