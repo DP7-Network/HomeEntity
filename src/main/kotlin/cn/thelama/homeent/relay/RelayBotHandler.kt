@@ -74,7 +74,7 @@ object RelayBotHandler : CommandExecutor {
                     "say" -> {
                         if(sender is ConsoleCommandSender || (sender is Player && AuthHandler.maintainer(sender.uniqueId, sender))) {
                             if(args.size > 1) {
-                                HomeEntity.instance.botInstance.say(args.slice(2..args.size).joinToString(separator = " ") { it })
+                                HomeEntity.instance.botInstance.say(args.slice(2 until args.size).joinToString(separator = " ") { it })
                             }
                         }
                     }

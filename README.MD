@@ -122,6 +122,8 @@ tpa / tphere 计价方法:
       - `stop-update-task` `launch-update-task` `status-update-task` 用于管理自动更新检查
       - `sync` 从一个Github仓库同步插件本体
     + 指令`admin`自动补全
+  - `Lama3L9R/master/Patch-3`:
+    + 修复 /relay say
   - `master/Patch-1`:
     + 修改 `CatDeathEvent` 和 `CatWeightChangedEvent`到异步
     + 添加更新日志
