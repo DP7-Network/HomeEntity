@@ -67,4 +67,5 @@ jobs:
           prerelease: false
           title: "Latest Build"
           files: |
+            *-all.jar
             ./build/libs/*-all.jar
