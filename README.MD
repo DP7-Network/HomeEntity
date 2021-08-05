@@ -108,6 +108,8 @@ tpa / tphere 计价方法:
     + 修改 `CatDeathEvent` 和 `CatWeightChangedEvent`到异步
     + 添加更新日志
     + 修复 `/warp <记录点名称>` 需要第三个参数才可查询
+  - `Patch-2`:
+    + 分离Back系统 
 
 ## 更新计划
 

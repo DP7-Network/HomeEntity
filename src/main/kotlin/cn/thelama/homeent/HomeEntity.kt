@@ -20,7 +20,6 @@ import cn.thelama.homeent.show.ShowManager
 import cn.thelama.homeent.slime.SlimeHandler
 import cn.thelama.homeent.tpa.*
 import cn.thelama.homeent.warp.HomeHandler
-import cn.thelama.homeent.warp.LocationEntry
 import cn.thelama.homeent.warp.WarpCompleter
 import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
@@ -37,14 +36,11 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.ConsoleCommandSender
 import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
-import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.entity.EntityDamageByEntityEvent
 import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
-import org.yaml.snakeyaml.Yaml
 import sun.misc.Unsafe
 import java.io.File
 import java.io.FileWriter
@@ -59,7 +55,7 @@ import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.6.0-1 Pre-Release"
+        const val VERSION = "1.6.0-2 Pre-Release"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
@@ -74,7 +70,6 @@ class HomeEntity : JavaPlugin(), Listener {
     lateinit var botInstance: Relay
     lateinit var minecraftTranslation: HashMap<String, String>
     lateinit var globalNetworkProxy: Proxy
-    val lastTeleport: HashMap<UUID, Location> = HashMap()
     val commandHelp: Array<BaseComponent> = ComponentBuilder("${ChatColor.GOLD}指令参数错误! ")
         .append(ComponentBuilder(
         "${ChatColor.GOLD}» ${ChatColor.UNDERLINE}点击这里获取帮助${ChatColor.RESET}${ChatColor.GOLD} «")
@@ -230,6 +225,7 @@ class HomeEntity : JavaPlugin(), Listener {
             server.pluginManager.registerEvents(PrefixManager, this)
             server.pluginManager.registerEvents(MotdManager, this)
             server.pluginManager.registerEvents(BossBarTips, this)
+            server.pluginManager.registerEvents(BackHandler, this)
 
             server.onlinePlayers.forEach {
                 it.setDisplayName(
@@ -322,12 +318,6 @@ class HomeEntity : JavaPlugin(), Listener {
             e.player.setDisplayName(
                 "${ChatColor.AQUA}[${parseWorld(e.to?.world?.name)}${ChatColor.AQUA}] ${e.player.name}")
         }
-        lastTeleport[e.player.uniqueId] = e.from
-    }
-
-    @EventHandler
-    fun onDeath(e: PlayerDeathEvent) {
-        lastTeleport[e.entity.uniqueId] = e.entity.location
     }
 
     fun parseWorld(name: String?): String {
