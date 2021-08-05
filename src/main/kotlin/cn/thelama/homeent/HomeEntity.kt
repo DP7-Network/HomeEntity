@@ -1,6 +1,7 @@
 @file:JvmName("HomeEntity")
 package cn.thelama.homeent
 
+import cn.thelama.homeent.autoupdate.UpdateManager
 import cn.thelama.homeent.back.BackHandler
 import cn.thelama.homeent.exit.ExitHandler
 import cn.thelama.homeent.module.ModuledPlayerDataManager
@@ -25,7 +26,6 @@ import cn.thelama.homeent.warp.WarpHandlerV2
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.reflect.TypeToken
-import io.ktor.http.*
 import kotlin.system.measureTimeMillis
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -48,7 +48,6 @@ import java.io.File
 import java.io.FileWriter
 import java.io.FileReader
 import java.io.InputStreamReader
-import java.lang.reflect.Field
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.URL
@@ -164,6 +163,7 @@ class HomeEntity : JavaPlugin(), Listener {
 
             this.getCommand("admin")!!.apply {
                 setExecutor(AdminHandler)
+                tabCompleter = AdminHandler
             }
 
             this.getCommand("exit")!!.apply {
@@ -241,8 +241,9 @@ class HomeEntity : JavaPlugin(), Listener {
                 it.setDisplayName(
                     "${ChatColor.AQUA}[${parseWorld(it.location.world?.name)}${ChatColor.AQUA}] ${it.name}")
             }
-            //launchCheckUpdatesTask()
-            logger.warning("${ChatColor.RED}因为lama穷导致CI没钱续费 :( 自动更新无了")
+
+            UpdateManager.launchAsyncUpdateChecker()
+
             logger.info("${ChatColor.GREEN}HomeEntity Bukkit注册完毕!")
 
             val listen = config.getLong("relay.listen")
@@ -389,28 +390,5 @@ class HomeEntity : JavaPlugin(), Listener {
     fun sha256(str: String): String {
         return String(Hex.encodeHex(MessageDigest.getInstance("SHA-256")
             .digest(str.toByteArray(charset("UTF-8"))), false))
-    }
-
-    private fun launchCheckUpdatesTask() {
-        Bukkit.getScheduler().runTaskTimerAsynchronously(this, Runnable {
-            tryUpdate()
-        }, 0, 3600 * 20)
-    }
-
-    private fun tryUpdate(sync: Boolean = false) {
-        this.logger.info("尝试更新中...")
-        val urlString = "$GITHUB_API_URL/repos/$REPO/"
-        this.logger.info("Http请求 GET $urlString 获取最后一次提交hash...")
-        val req = URL(urlString).openConnection() as HttpsURLConnection
-        req.requestProperties["User-Agent"] = listOf("Mozilla/5.0 (Charmless Server II; CharmlessServerII64; x64) Java11 & Kotlin 1.5 Repo(DP7-Network/HomeEntity) ForAutoUpdateOnly; <3 Github")
-
-        if(req.responseCode == 200) {
-            val rootObj = GSON.fromJson(InputStreamReader(req.inputStream), JsonElement::class.java).asJsonObject
-            if(rootObj["sha"].asString != COMMIT_HASH) {
-                this.logger.info("当前提交: ${COMMIT_HASH.substring(0..8)} 与远程提交: ${rootObj["sha"].asString.substring(0..8)} 不符, 尝试更新!")
-            }
-        } else {
-            this.logger.info("${ChatColor.RED}请求失败! 服务器返回了错误码: ${req.responseCode}")
-        }
     }
 }
