@@ -62,7 +62,7 @@ jobs:
       - name: "Publish to Github Actions"
         uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          repo_token: "${{ secrets.LAMA_UPLOAD_TOKEN }}"
           automatic_release_tag: "latest"
           prerelease: false
           title: "Latest Build"
