@@ -110,6 +110,11 @@ tpa / tphere 计价方法:
     + 修复 `/warp <记录点名称>` 需要第三个参数才可查询
   - `Patch-2`:
     + 分离Back系统 
+  - `Patch-3`:
+    + 优化代码，删除无用`import`
+    + 修改`/hent crash`的`Unsafe`调用方法到全反射
+    + 添加`reload`警告
+    + 添加服务器关闭/开启提示
 
 ## 更新计划
 

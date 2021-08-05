@@ -5,8 +5,6 @@ import cn.thelama.homeent.HomeEntity
 import io.netty.channel.ChannelDuplexHandler
 import io.netty.channel.ChannelHandlerContext
 import io.netty.channel.ChannelPromise
-import net.minecraft.network.chat.ChatMessageType
-import net.minecraft.network.chat.IChatBaseComponent
 import net.minecraft.network.protocol.Packet
 import net.minecraft.network.protocol.game.*
 import org.bukkit.ChatColor

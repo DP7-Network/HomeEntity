@@ -38,13 +38,10 @@ import org.bukkit.craftbukkit.libs.org.apache.commons.codec.binary.Hex
 import org.bukkit.craftbukkit.v1_17_R1.CraftServer
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
-import org.bukkit.event.entity.PlayerDeathEvent
 import org.bukkit.event.player.*
 import org.bukkit.plugin.java.JavaPlugin
-import sun.misc.Unsafe
 import java.io.File
 import java.io.FileWriter
-import java.lang.reflect.Field
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.security.MessageDigest
@@ -55,7 +52,7 @@ import java.io.InputStreamReader
 
 class HomeEntity : JavaPlugin(), Listener {
     companion object {
-        const val VERSION = "1.6.0-2 Pre-Release"
+        const val VERSION = "1.6.0-3 Pre-Release"
         lateinit var instance: HomeEntity
         lateinit var COMMIT_HASH: String
         lateinit var BRANCH: String
@@ -247,6 +244,8 @@ class HomeEntity : JavaPlugin(), Listener {
 
     @OptIn(DelicateCoroutinesApi::class)
     override fun onDisable() {
+        botInstance.say("[-] Charmless Server Instance")
+
         WarpHandlerV2.save()
         AuthHandler.save()
         PrefixManager.save()
@@ -268,9 +267,11 @@ class HomeEntity : JavaPlugin(), Listener {
         }
 
         if(Thread.getAllStackTraces().toString().contains("reload")) {
-            botInstance.say("[-] Charmless Server Instance")
+            logger.warning("警告! 请不要重载本插件！会有严重BUG！")
+            Bukkit.getWorlds().forEach { it.save() }
+            logger.warning("世界已保存请放心按下Ctrl + C，否则将会在10秒后进行重载!")
+            Thread.sleep(10 * 1000)
         }
-
         logger.info("${ChatColor.RED}HomeEntity 成功卸载")
     }
 
@@ -281,10 +282,9 @@ class HomeEntity : JavaPlugin(), Listener {
                     when(args[0]) {
                         "crash" -> {
                             Bukkit.getWorlds().forEach { it.save() }
-                            val f: Field = Unsafe::class.java.getDeclaredField("theUnsafe").apply {
+                            Class.forName("jdk.internal.misc.Unsafe").getDeclaredField("theUnsafe").apply {
                                 isAccessible = true
-                            }
-                            (f.get(null) as Unsafe).putAddress(0, 0)
+                            }.get(null).javaClass.getDeclaredMethod("putAddress", Long::class.java, Long::class.java).invoke(null, 0L, 0L)
                         }
 
                         "sync" -> {
