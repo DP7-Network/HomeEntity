@@ -67,5 +67,4 @@ jobs:
           prerelease: false
           title: "Latest Build"
           files: |
-            *-all.jar
-            ./build/libs/*-all.jar
+            ${{ github.workspace }}/build/libs/*-all.jar
