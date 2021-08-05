@@ -4,7 +4,7 @@ import org.bukkit.event.Cancellable
 import org.bukkit.event.Event
 import org.bukkit.event.HandlerList
 
-class CatWeightChangedEvent(var increaseWeight: Double, val befor: Double, val after: Double) : Event(), Cancellable {
+class CatWeightChangedEvent(var increaseWeight: Double, val befor: Double, val after: Double) : Event(true), Cancellable {
     companion object {
         private val handlerList = HandlerList()
     }

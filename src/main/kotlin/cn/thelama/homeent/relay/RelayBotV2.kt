@@ -43,6 +43,8 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
             }
         }
 
+        bot.sendTextMessage(ChatId(groupId), "[+] HomeEntity Relay Bot")
+
         bot.buildBehaviour(scope, defaultExceptionsHandler = {
             if(it !is CancellationException) {
                 it.printStackTrace()
@@ -141,6 +143,7 @@ class RelayBotV2(private val groupId: Long, private val token: String): Relay {
     }
 
     override suspend fun shutdown() {
+        bot.sendTextMessage(ChatId(groupId), "[-] HomeEntity Relay Bot")
         scope.cancel()
     }
 

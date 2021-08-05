@@ -6,8 +6,6 @@ import cn.thelama.homeent.module.ModuledPlayerDataManager
 import cn.thelama.homeent.module.PlayerDataProvider
 import com.google.gson.reflect.TypeToken
 import io.ktor.util.collections.*
-import net.minecraft.network.protocol.game.PacketPlayOutExplosion
-import net.minecraft.world.phys.Vec3D
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.command.Command
@@ -51,8 +49,6 @@ object AuthHandler : CommandExecutor, ModuleCommand, PlayerDataProvider<PlayerPe
                                 sender.sendMessage("${ChatColor.RED}这人注册了嘛? 我咋没找到呢? :(")
                             }
                         }
-
-
 
                         "limit" -> {
                             val p = Bukkit.getPlayer(args[1])

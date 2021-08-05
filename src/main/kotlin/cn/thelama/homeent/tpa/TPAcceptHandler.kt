@@ -5,9 +5,6 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import java.util.*
-import kotlin.math.ceil
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 object TPAcceptHandler : CommandExecutor {
     override fun onCommand(sender: CommandSender, command: Command, lable: String, args: Array<out String>): Boolean {

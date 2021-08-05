@@ -18,7 +18,6 @@ import org.bukkit.entity.Player
 import java.util.*
 import kotlin.NumberFormatException
 import kotlin.collections.ArrayList
-import kotlin.collections.LinkedHashMap
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -216,7 +215,7 @@ object WarpHandlerV2 : CommandExecutor, ModuleCommand, PlayerDataProvider<Linked
         }
 
         fun detail0(hasChildCommand: Boolean = true) {
-            if (args.size > 1) {
+            if (args.isNotEmpty()) {
                 val argIndex = if (hasChildCommand) 1 else 0
                 val entry = warps[sender.uniqueId]!![args[argIndex]]
                 if (entry == null) {

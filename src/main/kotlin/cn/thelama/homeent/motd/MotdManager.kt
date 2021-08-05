@@ -1,6 +1,5 @@
 package cn.thelama.homeent.motd
 
-import cn.thelama.homeent.HomeEntity
 import cn.thelama.homeent.secure.AuthHandler
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor

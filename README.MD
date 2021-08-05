@@ -107,12 +107,23 @@ tpa / tphere 计价方法:
 
 ### 更新日志: 
 - `1.6.0` 
-	- `Patch-1`: 
-	  	+ 修改登陆超时判定到缓存数据包数量, 目前上限为10000, 平均最高每分钟数据包数量约为7500
-	  	+ 添加/auth change用于玩家自行修改密码 格式: /auth change <老密码> <新密码>
-	  	+ 添加 README 中更多信息
-	  
-### 更新计划
+  - `Lama3L9R/master/Patch-1`: 
+	+ 修改登陆超时判定到缓存数据包数量, 目前上限为10000, 平均最高每分钟数据包数量约为7500
+	+ 添加/auth change用于玩家自行修改密码 格式: /auth change <老密码> <新密码>
+	+ 添加 README 中更多信息
+  - `master/Patch-1`:
+    + 修改 `CatDeathEvent` 和 `CatWeightChangedEvent`到异步
+    + 添加更新日志
+    + 修复 `/warp <记录点名称>` 需要第三个参数才可查询
+  - `master/Patch-2`:
+    + 分离Back系统 
+  - `master/Patch-3`:
+    + 优化代码，删除无用`import`
+    + 修改`/hent crash`的`Unsafe`调用方法到全反射
+    + 添加`reload`警告
+    + 添加服务器关闭/开启提示
+
+## 更新计划
 
 - 核心功能
   - 加急
@@ -127,7 +138,6 @@ tpa / tphere 计价方法:
   + [x] 更改 Telegram API 支持库到 InsanusMokrassar/TelegramBotAPI
   + [ ] TG玩家绑定
 
----
 ## 贡献代码
 
 首先, 需要一个 GitHub 账号, 并熟悉 Kotlin / Gradle / Git / Bukkit API 基本用法以及熟悉 Minecraft 这款游戏,
