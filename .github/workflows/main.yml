@@ -58,3 +58,13 @@ jobs:
         with:
           name: HomeEntity Production
           path: ./build/libs/*-all.jar
+
+      - name: "Publish to Github Actions"
+        uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: false
+          title: "Latest Build"
+          files: |
+            ./build/libs/*-all.jar
