@@ -24,7 +24,9 @@ object TPAHandler : CommandExecutor {
                 return true
             }
 
-            val cost = ceil(sqrt((p.location.x - sender.location.x).pow(2.0) + (p.location.z - sender.location.z).pow(2.0)) / 100)
+            var cost = ceil(sqrt((p.location.x - sender.location.x).pow(2.0) + (p.location.z - sender.location.z).pow(2.0)) / 100)
+            if(cost >= 20) {
+                cost = 19
             if(sender.health < cost) {
                 sender.sendMessage("${ChatColor.RED}无法传送! 您当前的血量不足以到达 ${args[0]} 的位置! 您的血量: ${floor(sender.health)}❤ 需要血量: $cost❤")
                 return true
