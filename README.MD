@@ -101,6 +101,7 @@ Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天�
 
 tpa / tphere 计价方法:
 ![formula](https://i.imgur.com/UCw2pAZ.jpg)
+PS: Cost取值极限19
 
 ## 更新日志：
 `1.6.0`:
