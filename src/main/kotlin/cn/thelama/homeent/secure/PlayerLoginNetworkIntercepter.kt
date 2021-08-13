@@ -19,9 +19,6 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
             if(str.startsWith(".")) {
                 val sl = str.split(" ")
                 if(sl.size >= 2) {
-                    if(sl[1].length < 4 || sl[1].length > 21) {
-                        player.sendMessage("${ChatColor.RED}密码长度必须为4到21位")
-                    }
                     when(sl[0].toLowerCase()) {
                         ".l", ".i", ".login" -> {
                             if(AuthHandler.checkCredentials(player.uniqueId, sl[1])) {
@@ -38,6 +35,10 @@ class PlayerLoginNetworkIntercepter(private val player: CraftPlayer) : ChannelDu
                         }
 
                         ".r", ".reg", ".register" -> {
+                            if(sl[1].length < 4 || sl[1].length > 21) {
+                                player.sendMessage("${ChatColor.RED}密码长度必须为4到21位")
+                                return
+                            }
                             if(sl.size < 2) {
                                 player.sendMessage("${ChatColor.RED}格式错误! .r <密码> <重复密码>")
                                 return
