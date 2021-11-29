@@ -4,6 +4,9 @@
 [![LICENSE](https://img.shields.io/badge/license-Anti%20996-blue.svg)](https://github.com/996icu/996.ICU/blob/master/LICENSE)
 [![Server](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/39.105.115.28:46277)](https://hello-minecraft-api-production.up.railway.app/api/ping-svg/39.105.115.28:46277)
 
+### OUTDATED! This project is decperated from now on! And will be replaced by `LSPlugin`
+### 已过时! 这个项目已被弃用！将会被替换为 `LSPlugin`
+
 Minecraft 服务器插件, DP7 Charmless 服务器专属 欢迎加入.DP7聊天群: [`Telegram`](https://t.me/joinchat/raRF9e8WOs84NzM1)
 
 **关于服务器插件自动更新没了: 因为CI拥有者Lama3L9R家境贫寒没钱续费导致服务器无了. 正在尝试切换到免费的CI**
